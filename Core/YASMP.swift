@@ -23,15 +23,6 @@ class YASMP {
 		player.masterClock = clock
 		sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
 	}
-	func hton(address: String) -> UInt32 {
-		let components: [String] = address.componentsSeparatedByString(".")
-		assert(components.count==4)
-		let elements: [UInt32] = components.map { UInt32($0) ?? 0 }
-		assert(elements.count==4)
-		return elements.enumerate().reduce(UInt32(0)) {
-			$0.0 | $0.1.element << UInt32( $0.1.index << 3 )
-		}
-	}
 	func server() {
 		
 		let source: dispatch_source_t = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ, UInt(sock), 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0))
@@ -49,10 +40,8 @@ class YASMP {
 			
 			assert(length==sizeof(CMTime)*3)
 			
-			recvfrom(sock, UnsafeMutablePointer<Void>(buffer), sizeof(CMTime)*3, 0, sockref, &socklen)
-			print("recv")
-			sendto(sock, UnsafePointer<Void>(buffer), sizeof(CMTime)*6, 0, sockref, socklen)
-			print("send")
+			assert(recvfrom(sock, UnsafeMutablePointer<Void>(buffer), sizeof(CMTime)*3, 0, sockref, &socklen)==sizeof(CMTime)*3)
+			assert(sendto(sock, UnsafePointer<Void>(buffer), sizeof(CMTime)*6, 0, sockref, socklen)==sizeof(CMTime)*6)
 			
 		}
 		
@@ -124,10 +113,10 @@ class YASMP {
 			sockref.memory.sin_family = sa_family_t(AF_INET)
 			sockref.memory.sin_len = __uint8_t(sockbuf.count)
 			sockref.memory.sin_port = in_port_t(9000)
-			sockref.memory.sin_addr.s_addr = hton(reference)
+			sockref.memory.sin_addr.s_addr = reference.componentsSeparatedByString(".").enumerate().reduce(UInt32(0)) { $0.0 | ( UInt32($0.1.element) ?? 0 ) << ( UInt32($0.1.index) << 3 ) }
 			
 			let pair: [CMTime] = [launch, player.currentTime(), CMClockGetTime(clock)]
-			sendto(sock, pair, sizeof(CMTime)*3, 0, UnsafePointer<sockaddr>(sockbuf), socklen_t(sockbuf.count))
+			assert(sendto(sock, pair, sizeof(CMTime)*3, 0, UnsafePointer<sockaddr>(sockbuf), socklen_t(sockbuf.count))==sizeof(CMTime)*pair.count)
 				
 			dispatch_resume(timer)
 			
