@@ -86,9 +86,9 @@ class YASMP {
 		func recv() {
 			
 			let length: Int = Int(dispatch_source_get_data(source))
-			let buffer: [CMTime] = [kCMTimeZero, kCMTimeZero, kCMTimeZero, kCMTimeZero, kCMTimeZero, kCMTimeZero, player.currentTime(), CMClockGetTime(clock)]
-			
 			assert(length==sizeof(CMTime)*6)
+			
+			let buffer: [CMTime] = [kCMTimeZero, kCMTimeZero, kCMTimeZero, kCMTimeZero, kCMTimeZero, kCMTimeZero, player.currentTime(), CMClockGetTime(clock)]
 			assert(recvfrom(sock, UnsafeMutablePointer<Void>(buffer), sizeof(CMTime)*6, 0, nil, nil)==sizeof(CMTime)*6)
 			
 			//let host: CMTime = buffer[0]
@@ -115,10 +115,9 @@ class YASMP {
 		
 		}
 		func send() {
+			
 			dispatch_suspend(timer)
-
-			let pair: [CMTime] = [launch, player.currentTime(), CMClockGetTime(clock)]
-				
+			
 			let sockbuf: [UInt8] = [UInt8](count: sizeof(sockaddr_in), repeatedValue: 0)
 			let sockref: UnsafeMutablePointer<sockaddr_in> = UnsafeMutablePointer<sockaddr_in>(sockbuf)
 				
@@ -126,20 +125,20 @@ class YASMP {
 			sockref.memory.sin_len = __uint8_t(sockbuf.count)
 			sockref.memory.sin_port = in_port_t(9000)
 			sockref.memory.sin_addr.s_addr = hton(reference)
-				
+			
+			let pair: [CMTime] = [launch, player.currentTime(), CMClockGetTime(clock)]
 			sendto(sock, pair, sizeof(CMTime)*3, 0, UnsafePointer<sockaddr>(sockbuf), socklen_t(sockbuf.count))
 				
 			dispatch_resume(timer)
+			
 		}
 		
 		dispatch_source_set_event_handler(source, recv)
-		dispatch_source_set_timer(timer, DISPATCH_TIME_NOW, UInt64(intervals * Double(NSEC_PER_SEC)), NSEC_PER_SEC)
+		dispatch_source_set_timer(timer, dispatch_time(DISPATCH_TIME_NOW, Int64(intervals*Double(NSEC_PER_SEC))), UInt64(intervals * Double(NSEC_PER_SEC)), NSEC_PER_SEC)
 		dispatch_source_set_event_handler(timer, send)
 		
 		dispatch_resume(source)
 		dispatch_resume(timer)
-		
-		player.play()
 	}
 	func loop(notification: NSNotification) {
 		guard let played: AVPlayerItem = notification.object as? AVPlayerItem else { fatalError() }
@@ -150,11 +149,11 @@ class YASMP {
 	}
 	func play(composition: AVComposition) {
 		let centre: NSNotificationCenter = NSNotificationCenter.defaultCenter()
-		//(0..<2).forEach { (_) in
+		(0..<2).forEach { (_) in
 			let item: AVPlayerItem = AVPlayerItem(asset: composition)
 			centre.addObserverForName(AVPlayerItemDidPlayToEndTimeNotification, object: item, queue: nil, usingBlock: loop)
 			player.insertItem(item, afterItem: nil)
-		//}
+		}
 		client("192.168.10.137", threshold: 1/60.0)
 //		server()
 	}
