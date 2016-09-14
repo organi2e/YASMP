@@ -6,20 +6,112 @@
 	objectVersion = 46;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		87D6F7421D87BDD4003339BD /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D6F7411D87BDD4003339BD /* AppDelegate.swift */; };
+		87D6F7441D87BDD4003339BD /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D6F7431D87BDD4003339BD /* ViewController.swift */; };
+		87D6F7471D87BDD4003339BD /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 87D6F7451D87BDD4003339BD /* Main.storyboard */; };
+		87D6F7491D87BDD4003339BD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 87D6F7481D87BDD4003339BD /* Assets.xcassets */; };
+		87D6F7501D87BE73003339BD /* YASMP.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D6F74F1D87BE73003339BD /* YASMP.swift */; };
+		87D6F7541D87CDEF003339BD /* 02.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 87D6F7531D87CDEF003339BD /* 02.mp4 */; };
+		87D6F7561D87D07D003339BD /* IPC.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D6F7551D87D07D003339BD /* IPC.swift */; };
+/* End PBXBuildFile section */
+
+/* Begin PBXFileReference section */
+		87D6F73E1D87BDD4003339BD /* tvYASMP.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = tvYASMP.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		87D6F7411D87BDD4003339BD /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		87D6F7431D87BDD4003339BD /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		87D6F7461D87BDD4003339BD /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		87D6F7481D87BDD4003339BD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		87D6F74A1D87BDD4003339BD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		87D6F74F1D87BE73003339BD /* YASMP.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = YASMP.swift; path = Core/YASMP.swift; sourceTree = "<group>"; };
+		87D6F7531D87CDEF003339BD /* 02.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; name = 02.mp4; path = tvYASMP/02.mp4; sourceTree = "<group>"; };
+		87D6F7551D87D07D003339BD /* IPC.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = IPC.swift; path = Core/IPC.swift; sourceTree = "<group>"; };
+/* End PBXFileReference section */
+
+/* Begin PBXFrameworksBuildPhase section */
+		87D6F73B1D87BDD4003339BD /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXFrameworksBuildPhase section */
+
 /* Begin PBXGroup section */
 		87D6F7331D87BDA2003339BD = {
 			isa = PBXGroup;
 			children = (
+				87D6F7531D87CDEF003339BD /* 02.mp4 */,
+				87D6F74E1D87BE5A003339BD /* Core */,
+				87D6F7401D87BDD4003339BD /* tvYASMP */,
+				87D6F73F1D87BDD4003339BD /* Products */,
 			);
 			sourceTree = "<group>";
 		};
+		87D6F73F1D87BDD4003339BD /* Products */ = {
+			isa = PBXGroup;
+			children = (
+				87D6F73E1D87BDD4003339BD /* tvYASMP.app */,
+			);
+			name = Products;
+			sourceTree = "<group>";
+		};
+		87D6F7401D87BDD4003339BD /* tvYASMP */ = {
+			isa = PBXGroup;
+			children = (
+				87D6F7411D87BDD4003339BD /* AppDelegate.swift */,
+				87D6F7431D87BDD4003339BD /* ViewController.swift */,
+				87D6F7451D87BDD4003339BD /* Main.storyboard */,
+				87D6F7481D87BDD4003339BD /* Assets.xcassets */,
+				87D6F74A1D87BDD4003339BD /* Info.plist */,
+			);
+			path = tvYASMP;
+			sourceTree = "<group>";
+		};
+		87D6F74E1D87BE5A003339BD /* Core */ = {
+			isa = PBXGroup;
+			children = (
+				87D6F74F1D87BE73003339BD /* YASMP.swift */,
+				87D6F7551D87D07D003339BD /* IPC.swift */,
+			);
+			name = Core;
+			sourceTree = "<group>";
+		};
 /* End PBXGroup section */
+
+/* Begin PBXNativeTarget section */
+		87D6F73D1D87BDD4003339BD /* tvYASMP */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 87D6F74B1D87BDD4003339BD /* Build configuration list for PBXNativeTarget "tvYASMP" */;
+			buildPhases = (
+				87D6F73A1D87BDD4003339BD /* Sources */,
+				87D6F73B1D87BDD4003339BD /* Frameworks */,
+				87D6F73C1D87BDD4003339BD /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = tvYASMP;
+			productName = tvYASMP;
+			productReference = 87D6F73E1D87BDD4003339BD /* tvYASMP.app */;
+			productType = "com.apple.product-type.application";
+		};
+/* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
 		87D6F7341D87BDA2003339BD /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
+				LastSwiftUpdateCheck = 0730;
 				LastUpgradeCheck = 0730;
+				TargetAttributes = {
+					87D6F73D1D87BDD4003339BD = {
+						CreatedOnToolsVersion = 7.3.1;
+						DevelopmentTeam = 49QMLWEE5Z;
+					};
+				};
 			};
 			buildConfigurationList = 87D6F7371D87BDA2003339BD /* Build configuration list for PBXProject "YASMP" */;
 			compatibilityVersion = "Xcode 3.2";
@@ -27,14 +119,55 @@
 			hasScannedForEncodings = 0;
 			knownRegions = (
 				en,
+				Base,
 			);
 			mainGroup = 87D6F7331D87BDA2003339BD;
+			productRefGroup = 87D6F73F1D87BDD4003339BD /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
+				87D6F73D1D87BDD4003339BD /* tvYASMP */,
 			);
 		};
 /* End PBXProject section */
+
+/* Begin PBXResourcesBuildPhase section */
+		87D6F73C1D87BDD4003339BD /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				87D6F7491D87BDD4003339BD /* Assets.xcassets in Resources */,
+				87D6F7471D87BDD4003339BD /* Main.storyboard in Resources */,
+				87D6F7541D87CDEF003339BD /* 02.mp4 in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXResourcesBuildPhase section */
+
+/* Begin PBXSourcesBuildPhase section */
+		87D6F73A1D87BDD4003339BD /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				87D6F7561D87D07D003339BD /* IPC.swift in Sources */,
+				87D6F7441D87BDD4003339BD /* ViewController.swift in Sources */,
+				87D6F7501D87BE73003339BD /* YASMP.swift in Sources */,
+				87D6F7421D87BDD4003339BD /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXSourcesBuildPhase section */
+
+/* Begin PBXVariantGroup section */
+		87D6F7451D87BDD4003339BD /* Main.storyboard */ = {
+			isa = PBXVariantGroup;
+			children = (
+				87D6F7461D87BDD4003339BD /* Base */,
+			);
+			name = Main.storyboard;
+			sourceTree = "<group>";
+		};
+/* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
 		87D6F7381D87BDA2003339BD /* Debug */ = {
@@ -49,6 +182,101 @@
 			};
 			name = Release;
 		};
+		87D6F74C1D87BDD4003339BD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = tvYASMP/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_BUNDLE_IDENTIFIER = com.organi2e.kn.kotan.tvYASMP;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = appletvos;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 9.2;
+			};
+			name = Debug;
+		};
+		87D6F74D1D87BDD4003339BD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				ASSETCATALOG_COMPILER_APPICON_NAME = "App Icon & Top Shelf Image";
+				ASSETCATALOG_COMPILER_LAUNCHIMAGE_NAME = LaunchImage;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				INFOPLIST_FILE = tvYASMP/Info.plist;
+				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/Frameworks";
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_BUNDLE_IDENTIFIER = com.organi2e.kn.kotan.tvYASMP;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = appletvos;
+				TARGETED_DEVICE_FAMILY = 3;
+				TVOS_DEPLOYMENT_TARGET = 9.2;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
@@ -57,6 +285,15 @@
 			buildConfigurations = (
 				87D6F7381D87BDA2003339BD /* Debug */,
 				87D6F7391D87BDA2003339BD /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		87D6F74B1D87BDD4003339BD /* Build configuration list for PBXNativeTarget "tvYASMP" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				87D6F74C1D87BDD4003339BD /* Debug */,
+				87D6F74D1D87BDD4003339BD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
