@@ -17,6 +17,8 @@ class ViewController: NSViewController {
 		let bundle: NSBundle = NSBundle.mainBundle()
 		if let url: NSURL = bundle.URLForResource("02", withExtension: "mp4") {
 			
+			view.window?.toggleFullScreen(nil)
+			
 			let layer = player.layer
 			layer.frame = view.frame
 			//view.layer.sublayers?.removeAll()

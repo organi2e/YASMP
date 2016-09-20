@@ -116,7 +116,7 @@ class YASMP {
 			sockref.memory.sin_addr.s_addr = reference.componentsSeparatedByString(".").enumerate().reduce(UInt32(0)) { $0.0 | ( UInt32($0.1.element) ?? 0 ) << ( UInt32($0.1.index) << 3 ) }
 			
 			let pair: [CMTime] = [launch, player.currentTime(), CMClockGetTime(clock)]
-			assert(sendto(sock, pair, sizeof(CMTime)*3, 0, UnsafePointer<sockaddr>(sockbuf), socklen_t(sockbuf.count))==sizeof(CMTime)*pair.count)
+			assert(sendto(sock, pair, sizeof(CMTime)*3, 0, UnsafePointer<sockaddr>(sockbuf), socklen_t(sockbuf.count))==sizeof(CMTime)*3)
 				
 			dispatch_resume(timer)
 			
@@ -143,8 +143,8 @@ class YASMP {
 			centre.addObserverForName(AVPlayerItemDidPlayToEndTimeNotification, object: item, queue: nil, usingBlock: loop)
 			player.insertItem(item, afterItem: nil)
 		}
-		client("192.168.10.137", threshold: 1/60.0)
-//		server()
+		//client("192.168.10.137", threshold: 1/60.0)
+		server()
 	}
 	func load(url: NSURL, error: ((AVKeyValueStatus)->())?) {
 		
