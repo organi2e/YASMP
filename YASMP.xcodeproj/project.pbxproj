@@ -12,13 +12,13 @@
 		872EEABD1D89317400C1C1F0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 872EEABC1D89317400C1C1F0 /* Assets.xcassets */; };
 		872EEAC01D89317400C1C1F0 /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 872EEABE1D89317400C1C1F0 /* Main.storyboard */; };
 		872EEAC51D8931BF00C1C1F0 /* YASMP.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D6F74F1D87BE73003339BD /* YASMP.swift */; };
-		872EEAC61D8931C800C1C1F0 /* 02.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 87D6F7531D87CDEF003339BD /* 02.mp4 */; };
-		87D6F7421D87BDD4003339BD /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D6F7411D87BDD4003339BD /* AppDelegate.swift */; };
-		87D6F7441D87BDD4003339BD /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D6F7431D87BDD4003339BD /* ViewController.swift */; };
-		87D6F7471D87BDD4003339BD /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 87D6F7451D87BDD4003339BD /* Main.storyboard */; };
-		87D6F7491D87BDD4003339BD /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 87D6F7481D87BDD4003339BD /* Assets.xcassets */; };
-		87D6F7501D87BE73003339BD /* YASMP.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D6F74F1D87BE73003339BD /* YASMP.swift */; };
-		87D6F7541D87CDEF003339BD /* 02.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 87D6F7531D87CDEF003339BD /* 02.mp4 */; };
+		87450E8B1D90E8F1008BAEFE /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87450E8A1D90E8F1008BAEFE /* AppDelegate.swift */; };
+		87450E8D1D90E8F1008BAEFE /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87450E8C1D90E8F1008BAEFE /* ViewController.swift */; };
+		87450E901D90E8F1008BAEFE /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 87450E8E1D90E8F1008BAEFE /* Main.storyboard */; };
+		87450E921D90E8F1008BAEFE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 87450E911D90E8F1008BAEFE /* Assets.xcassets */; };
+		87450EB51D90EBC7008BAEFE /* 02.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 87450E981D90E98D008BAEFE /* 02.mp4 */; };
+		87450EB61D90EC05008BAEFE /* YASMP.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D6F74F1D87BE73003339BD /* YASMP.swift */; };
+		87450EB71D90ED17008BAEFE /* 02.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 87450E981D90E98D008BAEFE /* 02.mp4 */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -28,14 +28,14 @@
 		872EEABC1D89317400C1C1F0 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		872EEABF1D89317400C1C1F0 /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		872EEAC11D89317400C1C1F0 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		87D6F73E1D87BDD4003339BD /* tvYASMP.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = tvYASMP.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		87D6F7411D87BDD4003339BD /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
-		87D6F7431D87BDD4003339BD /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
-		87D6F7461D87BDD4003339BD /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
-		87D6F7481D87BDD4003339BD /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		87D6F74A1D87BDD4003339BD /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		87450E881D90E8F1008BAEFE /* tvYASMP.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = tvYASMP.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		87450E8A1D90E8F1008BAEFE /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
+		87450E8C1D90E8F1008BAEFE /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
+		87450E8F1D90E8F1008BAEFE /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
+		87450E911D90E8F1008BAEFE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		87450E931D90E8F1008BAEFE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		87450E981D90E98D008BAEFE /* 02.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; name = 02.mp4; path = Mov/02.mp4; sourceTree = "<group>"; };
 		87D6F74F1D87BE73003339BD /* YASMP.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = YASMP.swift; path = Core/YASMP.swift; sourceTree = "<group>"; };
-		87D6F7531D87CDEF003339BD /* 02.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; name = 02.mp4; path = tvYASMP/02.mp4; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -46,7 +46,7 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		87D6F73B1D87BDD4003339BD /* Frameworks */ = {
+		87450E851D90E8F1008BAEFE /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -68,13 +68,25 @@
 			path = macYASMP;
 			sourceTree = "<group>";
 		};
+		87450E891D90E8F1008BAEFE /* tvYASMP */ = {
+			isa = PBXGroup;
+			children = (
+				87450E8A1D90E8F1008BAEFE /* AppDelegate.swift */,
+				87450E8C1D90E8F1008BAEFE /* ViewController.swift */,
+				87450E8E1D90E8F1008BAEFE /* Main.storyboard */,
+				87450E911D90E8F1008BAEFE /* Assets.xcassets */,
+				87450E931D90E8F1008BAEFE /* Info.plist */,
+			);
+			path = tvYASMP;
+			sourceTree = "<group>";
+		};
 		87D6F7331D87BDA2003339BD = {
 			isa = PBXGroup;
 			children = (
-				87D6F7531D87CDEF003339BD /* 02.mp4 */,
+				87450E981D90E98D008BAEFE /* 02.mp4 */,
 				87D6F74E1D87BE5A003339BD /* Core */,
-				87D6F7401D87BDD4003339BD /* tvYASMP */,
 				872EEAB71D89317400C1C1F0 /* macYASMP */,
+				87450E891D90E8F1008BAEFE /* tvYASMP */,
 				87D6F73F1D87BDD4003339BD /* Products */,
 			);
 			sourceTree = "<group>";
@@ -82,22 +94,10 @@
 		87D6F73F1D87BDD4003339BD /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				87D6F73E1D87BDD4003339BD /* tvYASMP.app */,
 				872EEAB61D89317400C1C1F0 /* macYASMP.app */,
+				87450E881D90E8F1008BAEFE /* tvYASMP.app */,
 			);
 			name = Products;
-			sourceTree = "<group>";
-		};
-		87D6F7401D87BDD4003339BD /* tvYASMP */ = {
-			isa = PBXGroup;
-			children = (
-				87D6F7411D87BDD4003339BD /* AppDelegate.swift */,
-				87D6F7431D87BDD4003339BD /* ViewController.swift */,
-				87D6F7451D87BDD4003339BD /* Main.storyboard */,
-				87D6F7481D87BDD4003339BD /* Assets.xcassets */,
-				87D6F74A1D87BDD4003339BD /* Info.plist */,
-			);
-			path = tvYASMP;
 			sourceTree = "<group>";
 		};
 		87D6F74E1D87BE5A003339BD /* Core */ = {
@@ -128,13 +128,13 @@
 			productReference = 872EEAB61D89317400C1C1F0 /* macYASMP.app */;
 			productType = "com.apple.product-type.application";
 		};
-		87D6F73D1D87BDD4003339BD /* tvYASMP */ = {
+		87450E871D90E8F1008BAEFE /* tvYASMP */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 87D6F74B1D87BDD4003339BD /* Build configuration list for PBXNativeTarget "tvYASMP" */;
+			buildConfigurationList = 87450E941D90E8F1008BAEFE /* Build configuration list for PBXNativeTarget "tvYASMP" */;
 			buildPhases = (
-				87D6F73A1D87BDD4003339BD /* Sources */,
-				87D6F73B1D87BDD4003339BD /* Frameworks */,
-				87D6F73C1D87BDD4003339BD /* Resources */,
+				87450E841D90E8F1008BAEFE /* Sources */,
+				87450E851D90E8F1008BAEFE /* Frameworks */,
+				87450E861D90E8F1008BAEFE /* Resources */,
 			);
 			buildRules = (
 			);
@@ -142,7 +142,7 @@
 			);
 			name = tvYASMP;
 			productName = tvYASMP;
-			productReference = 87D6F73E1D87BDD4003339BD /* tvYASMP.app */;
+			productReference = 87450E881D90E8F1008BAEFE /* tvYASMP.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -151,15 +151,17 @@
 		87D6F7341D87BDA2003339BD /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastSwiftUpdateCheck = 0730;
+				LastSwiftUpdateCheck = 0800;
 				LastUpgradeCheck = 0730;
 				TargetAttributes = {
 					872EEAB51D89317400C1C1F0 = {
 						CreatedOnToolsVersion = 7.3.1;
+						LastSwiftMigration = 0800;
 					};
-					87D6F73D1D87BDD4003339BD = {
-						CreatedOnToolsVersion = 7.3.1;
+					87450E871D90E8F1008BAEFE = {
+						CreatedOnToolsVersion = 8.0;
 						DevelopmentTeam = 49QMLWEE5Z;
+						ProvisioningStyle = Automatic;
 					};
 				};
 			};
@@ -176,8 +178,8 @@
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				87D6F73D1D87BDD4003339BD /* tvYASMP */,
 				872EEAB51D89317400C1C1F0 /* macYASMP */,
+				87450E871D90E8F1008BAEFE /* tvYASMP */,
 			);
 		};
 /* End PBXProject section */
@@ -187,19 +189,19 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				87450EB71D90ED17008BAEFE /* 02.mp4 in Resources */,
 				872EEABD1D89317400C1C1F0 /* Assets.xcassets in Resources */,
 				872EEAC01D89317400C1C1F0 /* Main.storyboard in Resources */,
-				872EEAC61D8931C800C1C1F0 /* 02.mp4 in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		87D6F73C1D87BDD4003339BD /* Resources */ = {
+		87450E861D90E8F1008BAEFE /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				87D6F7491D87BDD4003339BD /* Assets.xcassets in Resources */,
-				87D6F7471D87BDD4003339BD /* Main.storyboard in Resources */,
-				87D6F7541D87CDEF003339BD /* 02.mp4 in Resources */,
+				87450EB51D90EBC7008BAEFE /* 02.mp4 in Resources */,
+				87450E921D90E8F1008BAEFE /* Assets.xcassets in Resources */,
+				87450E901D90E8F1008BAEFE /* Main.storyboard in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -216,13 +218,13 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		87D6F73A1D87BDD4003339BD /* Sources */ = {
+		87450E841D90E8F1008BAEFE /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				87D6F7441D87BDD4003339BD /* ViewController.swift in Sources */,
-				87D6F7501D87BE73003339BD /* YASMP.swift in Sources */,
-				87D6F7421D87BDD4003339BD /* AppDelegate.swift in Sources */,
+				87450EB61D90EC05008BAEFE /* YASMP.swift in Sources */,
+				87450E8D1D90E8F1008BAEFE /* ViewController.swift in Sources */,
+				87450E8B1D90E8F1008BAEFE /* AppDelegate.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -237,10 +239,10 @@
 			name = Main.storyboard;
 			sourceTree = "<group>";
 		};
-		87D6F7451D87BDD4003339BD /* Main.storyboard */ = {
+		87450E8E1D90E8F1008BAEFE /* Main.storyboard */ = {
 			isa = PBXVariantGroup;
 			children = (
-				87D6F7461D87BDD4003339BD /* Base */,
+				87450E8F1D90E8F1008BAEFE /* Base */,
 			);
 			name = Main.storyboard;
 			sourceTree = "<group>";
@@ -296,6 +298,7 @@
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 3.0;
 			};
 			name = Debug;
 		};
@@ -339,22 +342,11 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.organi2e.kn.kotan.macYASMP;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = macosx;
+				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
 		};
-		87D6F7381D87BDA2003339BD /* Debug */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-			};
-			name = Debug;
-		};
-		87D6F7391D87BDA2003339BD /* Release */ = {
-			isa = XCBuildConfiguration;
-			buildSettings = {
-			};
-			name = Release;
-		};
-		87D6F74C1D87BDD4003339BD /* Debug */ = {
+		87450E951D90E8F1008BAEFE /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -368,14 +360,18 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVES = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
+				DEVELOPMENT_TEAM = 49QMLWEE5Z;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				ENABLE_TESTABILITY = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -399,13 +395,15 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.organi2e.kn.kotan.tvYASMP;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = appletvos;
+				SWIFT_ACTIVE_COMPILATION_CONDITIONS = DEBUG;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 3.0;
 				TARGETED_DEVICE_FAMILY = 3;
-				TVOS_DEPLOYMENT_TARGET = 9.2;
+				TVOS_DEPLOYMENT_TARGET = 10.0;
 			};
 			name = Debug;
 		};
-		87D6F74D1D87BDD4003339BD /* Release */ = {
+		87450E961D90E8F1008BAEFE /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -419,14 +417,18 @@
 				CLANG_WARN_BOOL_CONVERSION = YES;
 				CLANG_WARN_CONSTANT_CONVERSION = YES;
 				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
 				CLANG_WARN_EMPTY_BODY = YES;
 				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
 				CLANG_WARN_INT_CONVERSION = YES;
 				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVES = YES;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				DEVELOPMENT_TEAM = 49QMLWEE5Z;
 				ENABLE_NS_ASSERTIONS = NO;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -443,9 +445,23 @@
 				PRODUCT_BUNDLE_IDENTIFIER = com.organi2e.kn.kotan.tvYASMP;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = appletvos;
+				SWIFT_OPTIMIZATION_LEVEL = "-Owholemodule";
+				SWIFT_VERSION = 3.0;
 				TARGETED_DEVICE_FAMILY = 3;
-				TVOS_DEPLOYMENT_TARGET = 9.2;
+				TVOS_DEPLOYMENT_TARGET = 10.0;
 				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		87D6F7381D87BDA2003339BD /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+			};
+			name = Debug;
+		};
+		87D6F7391D87BDA2003339BD /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
 			};
 			name = Release;
 		};
@@ -459,21 +475,22 @@
 				872EEAC41D89317400C1C1F0 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		87450E941D90E8F1008BAEFE /* Build configuration list for PBXNativeTarget "tvYASMP" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				87450E951D90E8F1008BAEFE /* Debug */,
+				87450E961D90E8F1008BAEFE /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		87D6F7371D87BDA2003339BD /* Build configuration list for PBXProject "YASMP" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
 				87D6F7381D87BDA2003339BD /* Debug */,
 				87D6F7391D87BDA2003339BD /* Release */,
-			);
-			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
-		};
-		87D6F74B1D87BDD4003339BD /* Build configuration list for PBXNativeTarget "tvYASMP" */ = {
-			isa = XCConfigurationList;
-			buildConfigurations = (
-				87D6F74C1D87BDD4003339BD /* Debug */,
-				87D6F74D1D87BDD4003339BD /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

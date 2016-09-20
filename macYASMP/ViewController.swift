@@ -14,8 +14,8 @@ class ViewController: NSViewController {
 	
 	override func viewDidLoad() {
 		super.viewDidLoad()
-		let bundle: NSBundle = NSBundle.mainBundle()
-		if let url: NSURL = bundle.URLForResource("02", withExtension: "mp4") {
+		let bundle: Bundle = Bundle.main
+		if let url: URL = bundle.url(forResource: "02", withExtension: "mp4") {
 			
 			view.window?.toggleFullScreen(nil)
 			
@@ -25,7 +25,7 @@ class ViewController: NSViewController {
 			view.layer = layer
 			view.wantsLayer = true
 			
-			player.load(url) {
+			player.load(url: url) {
 				print($0)
 			}
 		} else {
@@ -35,7 +35,7 @@ class ViewController: NSViewController {
 	}
 
 
-	override var representedObject: AnyObject? {
+	override var representedObject: Any? {
 		didSet {
 		// Update the view, if already loaded.
 		}

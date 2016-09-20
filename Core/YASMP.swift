@@ -8,77 +8,80 @@
 import AVFoundation
 
 class YASMP {
+	enum Mode {
+		case Server(port: UInt16)
+		case Client(refer: String, port: UInt16, interval: Double)
+	}
 	let intervals: Double = 3
 	let port: Int = 10
 	let player: AVQueuePlayer
-	let sock: Int32
 	let clock: CMClock
+	let source: DispatchSourceRead
+	var launch: CMTime
 	var layer: AVPlayerLayer {
 		return AVPlayerLayer(player: player)
+	}
+	var sock: Int32 {
+		return Int32(source.handle)
 	}
 	init() {
 		clock = CMClockGetHostTimeClock()
 		player = AVQueuePlayer()
-		player.actionAtItemEnd = .None
+		player.actionAtItemEnd = .none
 		player.masterClock = clock
-		sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)
+		source = DispatchSource.makeReadSource(fileDescriptor: socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP), queue: DispatchQueue.global(qos: .userInteractive))
+		launch = kCMTimeZero
 	}
-	func server() {
+	private func server() {
 		
-		let source: dispatch_source_t = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ, UInt(sock), 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0))
-
-		let launch: CMTime = CMClockGetTime(clock)
-
 		func recv() {
 			
-			var socklen: socklen_t = socklen_t(sizeof(sockaddr_in))
-			let sockbuf: [UInt8] = [UInt8](count: Int(socklen), repeatedValue: 0)
-			let sockref: UnsafeMutablePointer<sockaddr> = UnsafeMutablePointer<sockaddr>(sockbuf)
+			var socklen: socklen_t = socklen_t(MemoryLayout<sockaddr_in>.size)
+			let sockref: UnsafeMutablePointer<sockaddr> = UnsafeMutablePointer<sockaddr>.allocate(capacity: MemoryLayout<sockaddr_in>.size)
+			defer { sockref.deinitialize() }
 			
-			let length: Int = Int(dispatch_source_get_data(source))
+			let length: Int = Int(source.data)
 			let buffer: [CMTime] = [kCMTimeZero, kCMTimeZero, kCMTimeZero, launch, player.currentTime(), CMClockGetTime(clock)]
 			
-			assert(length==sizeof(CMTime)*3)
+			assert(length==MemoryLayout<CMTime>.size*3)
 			
-			assert(recvfrom(sock, UnsafeMutablePointer<Void>(buffer), sizeof(CMTime)*3, 0, sockref, &socklen)==sizeof(CMTime)*3)
-			assert(sendto(sock, UnsafePointer<Void>(buffer), sizeof(CMTime)*6, 0, sockref, socklen)==sizeof(CMTime)*6)
+			assert(recvfrom(sock, UnsafeMutableRawPointer(mutating: buffer), MemoryLayout<CMTime>.size*3, 0, sockref, &socklen)==MemoryLayout<CMTime>.size*3)
+			assert(sendto(sock, UnsafeRawPointer(buffer), MemoryLayout<CMTime>.size*6, 0, sockref, socklen)==MemoryLayout<CMTime>.size*6)
 			
 		}
 		
-		let sockbuf: [UInt8] = [UInt8](count: sizeof(sockaddr_in), repeatedValue: 0)
-		let sockref: UnsafeMutablePointer<sockaddr_in> = UnsafeMutablePointer<sockaddr_in>(sockbuf)
+		let sockref: UnsafeMutablePointer<sockaddr_in> = UnsafeMutablePointer<sockaddr_in>.allocate(capacity: MemoryLayout<sockaddr_in>.size)
+		defer { sockref.deallocate(capacity: MemoryLayout<sockaddr_in>.size) }
 		
-		sockref.memory.sin_family = sa_family_t(AF_INET)
-		sockref.memory.sin_len = __uint8_t(sockbuf.count)
-		sockref.memory.sin_port = in_port_t(9000)
-		sockref.memory.sin_addr.s_addr = in_addr_t(0x00000000)
+		sockref.pointee.sin_family = sa_family_t(AF_INET)
+		sockref.pointee.sin_len = __uint8_t(MemoryLayout<sockaddr_in>.size)
+		sockref.pointee.sin_port = in_port_t(9000)
+		sockref.pointee.sin_addr.s_addr = in_addr_t(0x00000000)
 		
-		assert(0==bind(sock, UnsafePointer<sockaddr>(sockbuf), socklen_t(sockbuf.count)))
+		assert(0==bind(sock, UnsafeMutablePointer<sockaddr>(OpaquePointer(sockref)), socklen_t(MemoryLayout<sockaddr_in>.size)))
 		
-		dispatch_source_set_event_handler(source, recv)
-		dispatch_resume(source)
-		
+		source.setEventHandler(handler: recv)
+		source.resume()
+
+		launch = CMClockGetTime(clock)
 		player.play()
 		
 	}
-	func client(reference: String, threshold: Double) {
+	private func client(reference: String, threshold: Double) {
 		
-		let source: dispatch_source_t = dispatch_source_create(DISPATCH_SOURCE_TYPE_READ, UInt(sock), 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0))
-		let timer: dispatch_source_t = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_LOW, 0))
+		let timer: DispatchSourceTimer = DispatchSource.makeTimerSource(flags: .strict, queue: DispatchQueue.global(qos: .background))
 		
-		let launch: CMTime = CMClockGetTime(clock)
-
 		var prev: CMTime = kCMTimeZero
 		var hostAnchor: CMTime = kCMTimeZero
 		var peerAnchor: CMTime = kCMTimeZero
 		
 		func recv() {
 			
-			let length: Int = Int(dispatch_source_get_data(source))
-			assert(length==sizeof(CMTime)*6)
+			let length: Int = Int(source.data)
+			assert(length==MemoryLayout<CMTime>.size*6)
 			
 			let buffer: [CMTime] = [kCMTimeZero, kCMTimeZero, kCMTimeZero, kCMTimeZero, kCMTimeZero, kCMTimeZero, player.currentTime(), CMClockGetTime(clock)]
-			assert(recvfrom(sock, UnsafeMutablePointer<Void>(buffer), sizeof(CMTime)*6, 0, nil, nil)==sizeof(CMTime)*6)
+			assert(recvfrom(sock, UnsafeMutableRawPointer(mutating: buffer), MemoryLayout<CMTime>.size*6, 0, nil, nil)==MemoryLayout<CMTime>.size*6)
 			
 			//let host: CMTime = buffer[0]
 			let hostSeek: CMTime = CMTimeMultiplyByRatio(CMTimeAdd(buffer[1], buffer[6]), 1, 2)
@@ -88,7 +91,7 @@ class YASMP {
 			let peerTime: CMTime = buffer[5]
 			
 			if threshold < CMTimeGetSeconds(CMTimeAbsoluteValue(CMTimeSubtract(peerSeek, hostSeek))) {
-				player.setRate(Float(NSUserDefaults().doubleForKey(reference)), time: peerSeek, atHostTime: hostTime)
+				player.setRate(Float(UserDefaults().double(forKey: reference)), time: peerSeek, atHostTime: hostTime)
 			}
 			if 0 != CMTimeCompare(peer, prev) {
 				hostAnchor = hostTime
@@ -98,86 +101,98 @@ class YASMP {
 			else {
 				let hostInterval = CMTimeSubtract(hostTime, hostAnchor)
 				let peerInterval = CMTimeSubtract(peerTime, peerAnchor)
-				NSUserDefaults().setDouble((Double(peerInterval.value)/Double(hostInterval.value))*(Double(hostInterval.timescale)/Double(peerInterval.timescale)), forKey: reference)
-				NSUserDefaults().synchronize()
+				UserDefaults().set((Double(peerInterval.value)/Double(hostInterval.value))*(Double(hostInterval.timescale)/Double(peerInterval.timescale)), forKey: reference)
+				UserDefaults().synchronize()
 			}
 		
 		}
+		
 		func send() {
 			
-			dispatch_suspend(timer)
+			print("send")
 			
-			let sockbuf: [UInt8] = [UInt8](count: sizeof(sockaddr_in), repeatedValue: 0)
-			let sockref: UnsafeMutablePointer<sockaddr_in> = UnsafeMutablePointer<sockaddr_in>(sockbuf)
-				
-			sockref.memory.sin_family = sa_family_t(AF_INET)
-			sockref.memory.sin_len = __uint8_t(sockbuf.count)
-			sockref.memory.sin_port = in_port_t(9000)
-			sockref.memory.sin_addr.s_addr = reference.componentsSeparatedByString(".").enumerate().reduce(UInt32(0)) { $0.0 | ( UInt32($0.1.element) ?? 0 ) << ( UInt32($0.1.index) << 3 ) }
+			timer.suspend()
+			
+			let sockref: UnsafeMutablePointer<sockaddr_in> = UnsafeMutablePointer<sockaddr_in>.allocate(capacity: MemoryLayout<sockaddr_in>.size)
+			defer { sockref.deallocate(capacity: MemoryLayout<sockaddr_in>.size) }
+			
+			sockref.pointee.sin_family = sa_family_t(AF_INET)
+			sockref.pointee.sin_len = __uint8_t(MemoryLayout<sockaddr_in>.size)
+			sockref.pointee.sin_port = in_port_t(9000)
+			sockref.pointee.sin_addr.s_addr = reference.components(separatedBy: ".").enumerated().reduce(UInt32(0)) { $0.0 | ( UInt32($0.1.element) ?? 0 ) << ( UInt32($0.1.offset) << 3 ) }
 			
 			let pair: [CMTime] = [launch, player.currentTime(), CMClockGetTime(clock)]
-			assert(sendto(sock, pair, sizeof(CMTime)*3, 0, UnsafePointer<sockaddr>(sockbuf), socklen_t(sockbuf.count))==sizeof(CMTime)*3)
+			assert(sendto(sock, pair, MemoryLayout<CMTime>.size*3, 0, UnsafePointer<sockaddr>(OpaquePointer(sockref)), socklen_t(MemoryLayout<sockaddr_in>.size))==MemoryLayout<CMTime>.size*3)
 				
-			dispatch_resume(timer)
+			timer.resume()
 			
 		}
 		
-		dispatch_source_set_event_handler(source, recv)
-		dispatch_source_set_timer(timer, dispatch_time(DISPATCH_TIME_NOW, Int64(intervals*Double(NSEC_PER_SEC))), UInt64(intervals * Double(NSEC_PER_SEC)), NSEC_PER_SEC)
-		dispatch_source_set_event_handler(timer, send)
+		source.setEventHandler(handler: recv)
+		timer.scheduleRepeating(deadline: DispatchTime.now(), interval: intervals)
+		timer.setEventHandler(handler: send)
 		
-		dispatch_resume(source)
-		dispatch_resume(timer)
+		launch = CMClockGetTime(clock)
+		source.resume()
+		timer.resume()
 	}
-	func loop(notification: NSNotification) {
+	private func loop(notification: Notification) {
 		guard let played: AVPlayerItem = notification.object as? AVPlayerItem else { fatalError() }
-		played.seekToTime(kCMTimeZero)
+		played.seek(to: kCMTimeZero)
 		player.advanceToNextItem()
-		player.seekToTime(kCMTimeZero)
-		player.insertItem(played, afterItem: nil)
+		player.seek(to: kCMTimeZero)
+		player.insert(played, after: nil)
 	}
-	func play(composition: AVComposition) {
-		let centre: NSNotificationCenter = NSNotificationCenter.defaultCenter()
+	private func play(composition: AVComposition) {
+		let centre: NotificationCenter = NotificationCenter.default
 		(0..<2).forEach { (_) in
 			let item: AVPlayerItem = AVPlayerItem(asset: composition)
-			centre.addObserverForName(AVPlayerItemDidPlayToEndTimeNotification, object: item, queue: nil, usingBlock: loop)
-			player.insertItem(item, afterItem: nil)
+			centre.addObserver(forName: Notification.Name.AVPlayerItemDidPlayToEndTime, object: item, queue: nil, using: loop)
+			player.insert(item, after: nil)
 		}
-		//client("192.168.10.137", threshold: 1/60.0)
+		//client(reference: "192.168.10.137", threshold: 1/60.0)
 		server()
 	}
-	func load(url: NSURL, error: ((AVKeyValueStatus)->())?) {
+	func load(url: URL, error: ((AVKeyValueStatus)->())?) {
 		
 		func prepare(assets: AVURLAsset) {
 			let composition: AVMutableComposition = AVMutableComposition()
 			(0..<1024).forEach { (_) in
 				do {
 					let range: CMTimeRange = CMTimeRange(start: kCMTimeZero, duration: assets.duration)
-					try composition.insertTimeRange(range, ofAsset: assets, atTime: composition.duration)
+					try composition.insertTimeRange(range, of: assets, at: composition.duration)
 				} catch {
 					print("failed inserting")
 				}
 			}
-			play(composition)
+			play(composition: composition)
 		}
 
 		let key: String = "tracks"
-		let assets: AVURLAsset = AVURLAsset(URL: url)
+		let assets: AVURLAsset = AVURLAsset(url: url)
 		
-		assets.loadValuesAsynchronouslyForKeys([key]) {
-			switch assets.statusOfValueForKey(key, error: nil) {
-			case .Cancelled:
-				error?(.Cancelled)
-			case .Failed:
-				error?(.Cancelled)
-			case .Loaded:
-				prepare(assets)
-			case .Loading:
+		assets.loadValuesAsynchronously(forKeys: [key]) {
+			switch assets.statusOfValue(forKey: key, error: nil) {
+			case .cancelled:
+				error?(.cancelled)
+			case .failed:
+				error?(.cancelled)
+			case .loaded:
+				prepare(assets: assets)
+			case .loading:
 				break
-			case .Unknown:
-				error?(.Cancelled)
+			case .unknown:
+				error?(.cancelled)
 			}
 		}
 		
+	}
+	func pause() {
+		launch = kCMTimeZero
+		player.pause()
+	}
+	func resume() {
+		launch = CMClockGetTime(clock)
+		player.play()
 	}
 }
