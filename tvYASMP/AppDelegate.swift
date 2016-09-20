@@ -16,6 +16,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 
 	func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
 		// Override point for customization after application launch.
+		if let url: URL = Bundle.main.url(forResource: "02", withExtension: "mp4"), let view: UIView = window?.rootViewController?.view {
+			let layer = player.layer
+			layer.frame = view.frame
+			//view.layer.sublayers?.removeAll()
+			view.layer.addSublayer(layer)
+			player.load(url: url, mode: .Client(port: 9000, address: "192.168.10.137", threshold: 1/60.0, interval: 3)) {
+			//player.load(url: url, mode: .Server(port: 9000)) {
+				print($0)
+			}
+		} else {
+			assertionFailure()
+		}
 		return true
 	}
 
