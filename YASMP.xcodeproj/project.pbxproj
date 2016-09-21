@@ -19,7 +19,21 @@
 		87450EB51D90EBC7008BAEFE /* 02.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 87450E981D90E98D008BAEFE /* 02.mp4 */; };
 		87450EB61D90EC05008BAEFE /* YASMP.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D6F74F1D87BE73003339BD /* YASMP.swift */; };
 		87450EB71D90ED17008BAEFE /* 02.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 87450E981D90E98D008BAEFE /* 02.mp4 */; };
+		879F2C291D910D5E006DFB8B /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 879F2C281D910D5E006DFB8B /* main.swift */; };
+		879F2C2D1D910D81006DFB8B /* YASMP.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D6F74F1D87BE73003339BD /* YASMP.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		879F2C241D910D5E006DFB8B /* CopyFiles */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = /usr/share/man/man1/;
+			dstSubfolderSpec = 0;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 1;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		872EEAB61D89317400C1C1F0 /* macYASMP.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = macYASMP.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -35,6 +49,8 @@
 		87450E911D90E8F1008BAEFE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		87450E931D90E8F1008BAEFE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		87450E981D90E98D008BAEFE /* 02.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; name = 02.mp4; path = Mov/02.mp4; sourceTree = "<group>"; };
+		879F2C261D910D5E006DFB8B /* YASMP */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = YASMP; sourceTree = BUILT_PRODUCTS_DIR; };
+		879F2C281D910D5E006DFB8B /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		87D6F74F1D87BE73003339BD /* YASMP.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = YASMP.swift; path = Core/YASMP.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
@@ -47,6 +63,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		87450E851D90E8F1008BAEFE /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		879F2C231D910D5E006DFB8B /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -80,6 +103,14 @@
 			path = tvYASMP;
 			sourceTree = "<group>";
 		};
+		879F2C271D910D5E006DFB8B /* YASMP */ = {
+			isa = PBXGroup;
+			children = (
+				879F2C281D910D5E006DFB8B /* main.swift */,
+			);
+			path = YASMP;
+			sourceTree = "<group>";
+		};
 		87D6F7331D87BDA2003339BD = {
 			isa = PBXGroup;
 			children = (
@@ -87,6 +118,7 @@
 				87D6F74E1D87BE5A003339BD /* Core */,
 				872EEAB71D89317400C1C1F0 /* macYASMP */,
 				87450E891D90E8F1008BAEFE /* tvYASMP */,
+				879F2C271D910D5E006DFB8B /* YASMP */,
 				87D6F73F1D87BDD4003339BD /* Products */,
 			);
 			sourceTree = "<group>";
@@ -96,6 +128,7 @@
 			children = (
 				872EEAB61D89317400C1C1F0 /* macYASMP.app */,
 				87450E881D90E8F1008BAEFE /* tvYASMP.app */,
+				879F2C261D910D5E006DFB8B /* YASMP */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -145,6 +178,23 @@
 			productReference = 87450E881D90E8F1008BAEFE /* tvYASMP.app */;
 			productType = "com.apple.product-type.application";
 		};
+		879F2C251D910D5E006DFB8B /* YASMP */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 879F2C2C1D910D5E006DFB8B /* Build configuration list for PBXNativeTarget "YASMP" */;
+			buildPhases = (
+				879F2C221D910D5E006DFB8B /* Sources */,
+				879F2C241D910D5E006DFB8B /* CopyFiles */,
+				879F2C231D910D5E006DFB8B /* Frameworks */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = YASMP;
+			productName = YASMP;
+			productReference = 879F2C261D910D5E006DFB8B /* YASMP */;
+			productType = "com.apple.product-type.tool";
+		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
@@ -161,6 +211,10 @@
 					87450E871D90E8F1008BAEFE = {
 						CreatedOnToolsVersion = 8.0;
 						DevelopmentTeam = 49QMLWEE5Z;
+						ProvisioningStyle = Automatic;
+					};
+					879F2C251D910D5E006DFB8B = {
+						CreatedOnToolsVersion = 8.0;
 						ProvisioningStyle = Automatic;
 					};
 				};
@@ -180,6 +234,7 @@
 			targets = (
 				872EEAB51D89317400C1C1F0 /* macYASMP */,
 				87450E871D90E8F1008BAEFE /* tvYASMP */,
+				879F2C251D910D5E006DFB8B /* YASMP */,
 			);
 		};
 /* End PBXProject section */
@@ -225,6 +280,15 @@
 				87450EB61D90EC05008BAEFE /* YASMP.swift in Sources */,
 				87450E8D1D90E8F1008BAEFE /* ViewController.swift in Sources */,
 				87450E8B1D90E8F1008BAEFE /* AppDelegate.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		879F2C221D910D5E006DFB8B /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				879F2C291D910D5E006DFB8B /* main.swift in Sources */,
+				879F2C2D1D910D81006DFB8B /* YASMP.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -453,6 +517,98 @@
 			};
 			name = Release;
 		};
+		879F2C2A1D910D5E006DFB8B /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVES = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = dwarf;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				ENABLE_TESTABILITY = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_DYNAMIC_NO_PIC = NO;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_OPTIMIZATION_LEVEL = 0;
+				GCC_PREPROCESSOR_DEFINITIONS = (
+					"DEBUG=1",
+					"$(inherited)",
+				);
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = YES;
+				ONLY_ACTIVE_ARCH = YES;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 3.0;
+			};
+			name = Debug;
+		};
+		879F2C2B1D910D5E006DFB8B /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				ALWAYS_SEARCH_USER_PATHS = NO;
+				CLANG_ANALYZER_NONNULL = YES;
+				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LIBRARY = "libc++";
+				CLANG_ENABLE_MODULES = YES;
+				CLANG_ENABLE_OBJC_ARC = YES;
+				CLANG_WARN_BOOL_CONVERSION = YES;
+				CLANG_WARN_CONSTANT_CONVERSION = YES;
+				CLANG_WARN_DIRECT_OBJC_ISA_USAGE = YES_ERROR;
+				CLANG_WARN_DOCUMENTATION_COMMENTS = YES;
+				CLANG_WARN_EMPTY_BODY = YES;
+				CLANG_WARN_ENUM_CONVERSION = YES;
+				CLANG_WARN_INFINITE_RECURSION = YES;
+				CLANG_WARN_INT_CONVERSION = YES;
+				CLANG_WARN_OBJC_ROOT_CLASS = YES_ERROR;
+				CLANG_WARN_SUSPICIOUS_MOVES = YES;
+				CLANG_WARN_UNREACHABLE_CODE = YES;
+				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "-";
+				COPY_PHASE_STRIP = NO;
+				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
+				ENABLE_NS_ASSERTIONS = NO;
+				ENABLE_STRICT_OBJC_MSGSEND = YES;
+				GCC_C_LANGUAGE_STANDARD = gnu99;
+				GCC_NO_COMMON_BLOCKS = YES;
+				GCC_WARN_64_TO_32_BIT_CONVERSION = YES;
+				GCC_WARN_ABOUT_RETURN_TYPE = YES_ERROR;
+				GCC_WARN_UNDECLARED_SELECTOR = YES;
+				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
+				GCC_WARN_UNUSED_FUNCTION = YES;
+				GCC_WARN_UNUSED_VARIABLE = YES;
+				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MTL_ENABLE_DEBUG_INFO = NO;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = macosx;
+				SWIFT_VERSION = 3.0;
+			};
+			name = Release;
+		};
 		87D6F7381D87BDA2003339BD /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
@@ -485,6 +641,14 @@
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
+		};
+		879F2C2C1D910D5E006DFB8B /* Build configuration list for PBXNativeTarget "YASMP" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				879F2C2A1D910D5E006DFB8B /* Debug */,
+				879F2C2B1D910D5E006DFB8B /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
 		};
 		87D6F7371D87BDA2003339BD /* Build configuration list for PBXProject "YASMP" */ = {
 			isa = XCConfigurationList;

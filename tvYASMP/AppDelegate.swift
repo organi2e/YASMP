@@ -21,8 +21,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
 			layer.frame = view.frame
 			//view.layer.sublayers?.removeAll()
 			view.layer.addSublayer(layer)
-			player.load(url: url, mode: .Client(port: 9000, address: "192.168.10.137", threshold: 1/60.0, interval: 3)) {
-			//player.load(url: url, mode: .Server(port: 9000)) {
+			//player.load(url: url, mode: .Client(port: 9000, address: "192.168.10.137", threshold: 1/60.0, interval: 3)) {
+			player.load(url: url, mode: .Server(port: 9000)) {
 				print($0)
 			}
 		} else {

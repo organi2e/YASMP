@@ -16,7 +16,7 @@ class YASMP {
 	let player: AVQueuePlayer
 	let clock: CMClock
 	let source: DispatchSourceRead
-	
+	var looper: AVPlayerLooper?
 	var launch: CMTime
 	var layer: AVPlayerLayer {
 		return AVPlayerLayer(player: player)
@@ -37,7 +37,7 @@ class YASMP {
 		source = DispatchSource.makeReadSource(fileDescriptor: socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP), queue: DispatchQueue.global(qos: .userInteractive))
 		launch = kCMTimeZero
 	}
-	private func server(port: UInt16) {
+	private func server(loop: AVPlayerLooper, port: UInt16) {
 		
 		func recv() {
 			
@@ -46,7 +46,10 @@ class YASMP {
 			defer { sockref.deinitialize() }
 			
 			let length: Int = Int(source.data)
-			let buffer: [CMTime] = [kCMTimeZero, kCMTimeZero, kCMTimeZero, launch, player.currentTime(), CMClockGetTime(clock)]
+			let buffer: [CMTime] = [
+				kCMTimeZero, kCMTimeZero, kCMTimeZero,//peer
+				launch, loop.loopingPlayerItems.reduce(player.currentTime()) { CMTimeAdd($0.0, CMTimeMultiplyByRatio($0.1.duration, Int32(loop.loopCount), 1)) }, CMClockGetTime(clock)//self
+			]
 			
 			assert(length==MemoryLayout<CMTime>.size*3)
 			
@@ -72,7 +75,7 @@ class YASMP {
 		player.play()
 		
 	}
-	private func client(port: UInt16, address: String, threshold: Double, interval: Double) {
+	private func client(loop: AVPlayerLooper, port: UInt16, address: String, threshold: Double, interval: Double) {
 		
 		let timer: DispatchSourceTimer = DispatchSource.makeTimerSource(flags: .strict, queue: DispatchQueue.global(qos: .background))
 		
@@ -85,7 +88,11 @@ class YASMP {
 			let length: Int = Int(source.data)
 			assert(length==MemoryLayout<CMTime>.size*6)
 			
-			let buffer: [CMTime] = [kCMTimeZero, kCMTimeZero, kCMTimeZero, kCMTimeZero, kCMTimeZero, kCMTimeZero, player.currentTime(), CMClockGetTime(clock)]
+			let buffer: [CMTime] = [
+				kCMTimeZero, kCMTimeZero, kCMTimeZero,//self
+				kCMTimeZero, kCMTimeZero, kCMTimeZero,//peer
+				loop.loopingPlayerItems.reduce(player.currentTime()) { CMTimeAdd($0.0, CMTimeMultiplyByRatio($0.1.duration, Int32(loop.loopCount), 1)) }, CMClockGetTime(clock)//elapsed
+			]
 			assert(recvfrom(sock, UnsafeMutableRawPointer(mutating: buffer), MemoryLayout<CMTime>.size*6, 0, nil, nil)==MemoryLayout<CMTime>.size*6)
 			
 			//let host: CMTime = buffer[0]
@@ -95,7 +102,7 @@ class YASMP {
 			let peerSeek: CMTime = buffer[4]
 			let peerTime: CMTime = buffer[5]
 			
-			if threshold < CMTimeGetSeconds(CMTimeAbsoluteValue(CMTimeSubtract(peerSeek, hostSeek))) {
+			if player.status == .readyToPlay && threshold < CMTimeGetSeconds(CMTimeAbsoluteValue(CMTimeSubtract(peerSeek, hostSeek))) {
 				player.setRate(Float(UserDefaults().double(forKey: address)), time: peerSeek, atHostTime: hostTime)
 			}
 			if 0 != CMTimeCompare(peer, prev) {
@@ -109,7 +116,7 @@ class YASMP {
 				UserDefaults().set((Double(peerInterval.value)/Double(hostInterval.value))*(Double(hostInterval.timescale)/Double(peerInterval.timescale)), forKey: address)
 				UserDefaults().synchronize()
 			}
-		
+			
 		}
 		
 		func send() {
@@ -124,7 +131,11 @@ class YASMP {
 			sockref.pointee.sin_port = port
 			sockref.pointee.sin_addr.s_addr = address.components(separatedBy: ".").enumerated().reduce(UInt32(0)) { $0.0 | ( UInt32($0.1.element) ?? 0 ) << ( UInt32($0.1.offset) << 3 ) }
 			
-			let pair: [CMTime] = [launch, player.currentTime(), CMClockGetTime(clock)]
+			let pair: [CMTime] = [
+				launch,
+				loop.loopingPlayerItems.reduce(player.currentTime()) { CMTimeAdd($0.0, CMTimeMultiplyByRatio($0.1.duration, Int32(loop.loopCount), 1)) },
+				CMClockGetTime(clock)
+			]
 			assert(sendto(sock, pair, MemoryLayout<CMTime>.size*3, 0, UnsafePointer<sockaddr>(OpaquePointer(sockref)), socklen_t(MemoryLayout<sockaddr_in>.size))==MemoryLayout<CMTime>.size*3)
 				
 			timer.resume()
@@ -139,14 +150,7 @@ class YASMP {
 		source.resume()
 		timer.resume()
 	}
-	private func loop(notification: Notification) {
-		guard let played: AVPlayerItem = notification.object as? AVPlayerItem else { fatalError() }
-		played.seek(to: kCMTimeZero)
-		player.advanceToNextItem()
-		player.seek(to: kCMTimeZero)
-		player.insert(played, after: nil)
-	}
-	func load(url: URL, mode: Mode, combine: (Int, Int) = (1024, 2), error: ((AVKeyValueStatus)->())?) {
+	func load(url: URL, mode: Mode, combine: (Int, Int) = (1, 1), error: ((AVKeyValueStatus)->())?) {
 		
 		func prepare(assets: AVURLAsset) {
 			let composition: AVMutableComposition = AVMutableComposition()
@@ -158,16 +162,11 @@ class YASMP {
 					print("failed inserting")
 				}
 			}
-			(0..<combine.1).forEach { (_) in
-				let item: AVPlayerItem = AVPlayerItem(asset: composition)
-				NotificationCenter.default.addObserver(forName: Notification.Name.AVPlayerItemDidPlayToEndTime, object: item, queue: nil, using: loop)
-				player.insert(item, after: nil)
-			}
 			switch mode {
 			case let .Server(port):
-				server(port: port)
+				server(loop: AVPlayerLooper(player: player, templateItem: AVPlayerItem(asset: composition)), port: port)
 			case let .Client(port, address, threshold, interval):
-				client(port: port, address: address, threshold: threshold, interval: interval)
+				client(loop: AVPlayerLooper(player: player, templateItem: AVPlayerItem(asset: composition)), port: port, address: address, threshold: threshold, interval: interval)
 			}
 		}
 
