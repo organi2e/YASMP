@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		8711ED8E1E5AC3BA0065B88C /* getopt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8711ED8B1E5AC3BA0065B88C /* getopt.swift */; };
 		872EEAB91D89317400C1C1F0 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 872EEAB81D89317400C1C1F0 /* AppDelegate.swift */; };
 		872EEABB1D89317400C1C1F0 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 872EEABA1D89317400C1C1F0 /* ViewController.swift */; };
 		872EEABD1D89317400C1C1F0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 872EEABC1D89317400C1C1F0 /* Assets.xcassets */; };
@@ -16,9 +17,7 @@
 		87450E8D1D90E8F1008BAEFE /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87450E8C1D90E8F1008BAEFE /* ViewController.swift */; };
 		87450E901D90E8F1008BAEFE /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 87450E8E1D90E8F1008BAEFE /* Main.storyboard */; };
 		87450E921D90E8F1008BAEFE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 87450E911D90E8F1008BAEFE /* Assets.xcassets */; };
-		87450EB51D90EBC7008BAEFE /* 02.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 87450E981D90E98D008BAEFE /* 02.mp4 */; };
 		87450EB61D90EC05008BAEFE /* YASMP.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D6F74F1D87BE73003339BD /* YASMP.swift */; };
-		87450EB71D90ED17008BAEFE /* 02.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = 87450E981D90E98D008BAEFE /* 02.mp4 */; };
 		879F2C291D910D5E006DFB8B /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 879F2C281D910D5E006DFB8B /* main.swift */; };
 		879F2C2D1D910D81006DFB8B /* YASMP.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D6F74F1D87BE73003339BD /* YASMP.swift */; };
 /* End PBXBuildFile section */
@@ -36,6 +35,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		8711ED8B1E5AC3BA0065B88C /* getopt.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = getopt.swift; path = Core/getopt.swift; sourceTree = "<group>"; };
 		872EEAB61D89317400C1C1F0 /* macYASMP.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = macYASMP.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		872EEAB81D89317400C1C1F0 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		872EEABA1D89317400C1C1F0 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -48,7 +48,6 @@
 		87450E8F1D90E8F1008BAEFE /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		87450E911D90E8F1008BAEFE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		87450E931D90E8F1008BAEFE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		87450E981D90E98D008BAEFE /* 02.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; name = 02.mp4; path = Mov/02.mp4; sourceTree = "<group>"; };
 		879F2C261D910D5E006DFB8B /* YASMP */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = YASMP; sourceTree = BUILT_PRODUCTS_DIR; };
 		879F2C281D910D5E006DFB8B /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		87D6F74F1D87BE73003339BD /* YASMP.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = YASMP.swift; path = Core/YASMP.swift; sourceTree = "<group>"; };
@@ -114,7 +113,6 @@
 		87D6F7331D87BDA2003339BD = {
 			isa = PBXGroup;
 			children = (
-				87450E981D90E98D008BAEFE /* 02.mp4 */,
 				87D6F74E1D87BE5A003339BD /* Core */,
 				872EEAB71D89317400C1C1F0 /* macYASMP */,
 				87450E891D90E8F1008BAEFE /* tvYASMP */,
@@ -137,6 +135,7 @@
 			isa = PBXGroup;
 			children = (
 				87D6F74F1D87BE73003339BD /* YASMP.swift */,
+				8711ED8B1E5AC3BA0065B88C /* getopt.swift */,
 			);
 			name = Core;
 			sourceTree = "<group>";
@@ -244,7 +243,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				87450EB71D90ED17008BAEFE /* 02.mp4 in Resources */,
 				872EEABD1D89317400C1C1F0 /* Assets.xcassets in Resources */,
 				872EEAC01D89317400C1C1F0 /* Main.storyboard in Resources */,
 			);
@@ -254,7 +252,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				87450EB51D90EBC7008BAEFE /* 02.mp4 in Resources */,
 				87450E921D90E8F1008BAEFE /* Assets.xcassets in Resources */,
 				87450E901D90E8F1008BAEFE /* Main.storyboard in Resources */,
 			);
@@ -288,6 +285,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				879F2C291D910D5E006DFB8B /* main.swift in Sources */,
+				8711ED8E1E5AC3BA0065B88C /* getopt.swift in Sources */,
 				879F2C2D1D910D81006DFB8B /* YASMP.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -355,12 +353,10 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = macYASMP/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				MTL_ENABLE_DEBUG_INFO = YES;
-				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_BUNDLE_IDENTIFIER = com.organi2e.kn.kotan.macYASMP;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 3.0;
 			};
@@ -401,11 +397,10 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				INFOPLIST_FILE = macYASMP/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = "$(inherited) @executable_path/../Frameworks";
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				PRODUCT_BUNDLE_IDENTIFIER = com.organi2e.kn.kotan.macYASMP;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
 				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
@@ -557,11 +552,9 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				MTL_ENABLE_DEBUG_INFO = YES;
-				ONLY_ACTIVE_ARCH = YES;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
 				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
 				SWIFT_VERSION = 3.0;
 			};
@@ -601,10 +594,9 @@
 				GCC_WARN_UNINITIALIZED_AUTOS = YES_AGGRESSIVE;
 				GCC_WARN_UNUSED_FUNCTION = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.11;
+				MACOSX_DEPLOYMENT_TARGET = 10.12;
 				MTL_ENABLE_DEBUG_INFO = NO;
 				PRODUCT_NAME = "$(TARGET_NAME)";
-				SDKROOT = macosx;
 				SWIFT_VERSION = 3.0;
 			};
 			name = Release;
@@ -649,6 +641,7 @@
 				879F2C2B1D910D5E006DFB8B /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
 		};
 		87D6F7371D87BDA2003339BD /* Build configuration list for PBXProject "YASMP" */ = {
 			isa = XCConfigurationList;

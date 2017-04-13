@@ -12,6 +12,11 @@ class YASMP {
 		case Server(port: UInt16)
 		case Client(port: UInt16, address: String, threshold: Double, interval: Double)
 	}
+	enum Item {
+		case Single(url: URL)
+		case Shuffle(urls: Array<URL>)
+		case Sequence(urls: Array<URL>, playlist: Array<Int>)
+	}
 	
 	let player: AVQueuePlayer
 	let clock: CMClock
@@ -29,11 +34,7 @@ class YASMP {
 		player = AVQueuePlayer()
 		player.actionAtItemEnd = .none
 		player.masterClock = clock
-		if #available(OSX 10.12, *) {
-			player.automaticallyWaitsToMinimizeStalling = false
-		} else {
-			// Fallback on earlier versions
-		}
+		player.automaticallyWaitsToMinimizeStalling = false
 		source = DispatchSource.makeReadSource(fileDescriptor: socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP), queue: DispatchQueue.global(qos: .userInteractive))
 		launch = kCMTimeZero
 	}
@@ -150,11 +151,58 @@ class YASMP {
 		source.resume()
 		timer.resume()
 	}
-	func load(url: URL, mode: Mode, combine: (Int, Int) = (1, 1), error: ((AVKeyValueStatus)->())?) {
+	public func load(urls: Array<URL>, mode: Mode, loop: Int, playlist: Array<Int> = Array<Int>(), error: ((AVKeyValueStatus)->())?) {
+		let composition: AVMutableComposition = AVMutableComposition()
+		let assets: Array<AVURLAsset> = urls.map { AVURLAsset(url: $0) }
+		let semaphore: DispatchSemaphore = DispatchSemaphore(value: assets.count)
+		assets.forEach {
+			let assets: AVURLAsset = $0
+			let key: String = "tracks"
+			assets.loadValuesAsynchronously(forKeys: [key]) {
+				switch assets.statusOfValue(forKey: key, error: nil) {
+				case .cancelled:
+                    error?(.cancelled)
+				case .failed:
+                    error?(.failed)
+				case .loaded:
+					semaphore.signal()
+				case .loading:
+					break
+				case .unknown:
+                    error?(.unknown)
+				}
+			}
+		}
+		semaphore.wait()
+        func seq(loop: Int, max: Int) -> Array<Int> {
+			var last: Int = 0
+			return (0..<loop).map { (_) in
+				let next: Int = last + Int ( arc4random_uniform ( UInt32( max ) - 1 ) + 1 )
+				defer { last = next }
+				return next
+			}
+		}
+        ( playlist.isEmpty ? seq(loop: loop, max: assets.count ) : playlist ).forEach {
+			let asset: AVURLAsset = assets [ $0 % assets.count ]
+			do {
+				let range: CMTimeRange = CMTimeRange(start: kCMTimeZero, duration: asset.duration)
+				try composition.insertTimeRange(range, of: asset, at: composition.duration)
+			} catch {
+				print("failed inserting")
+			}
+		}
+		switch mode {
+		case let .Server(port):
+			server(loop: AVPlayerLooper(player: player, templateItem: AVPlayerItem(asset: composition)), port: port)
+		case let .Client(port, address, threshold, interval):
+			client(loop: AVPlayerLooper(player: player, templateItem: AVPlayerItem(asset: composition)), port: port, address: address, threshold: threshold, interval: interval)
+		}
+	}
+	public func load(url: URL, mode: Mode, loop: Int, error: ((AVKeyValueStatus)->())?) {
 		
 		func prepare(assets: AVURLAsset) {
 			let composition: AVMutableComposition = AVMutableComposition()
-			(0..<combine.0).forEach { (_) in
+			(0..<loop).forEach { (_) in
 				do {
 					let range: CMTimeRange = CMTimeRange(start: kCMTimeZero, duration: assets.duration)
 					try composition.insertTimeRange(range, of: assets, at: composition.duration)
