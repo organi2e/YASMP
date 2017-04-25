@@ -44,19 +44,26 @@ class YASMP {
 			
 			var socklen: socklen_t = socklen_t(MemoryLayout<sockaddr_in>.size)
 			let sockref: UnsafeMutablePointer<sockaddr> = UnsafeMutablePointer<sockaddr>.allocate(capacity: MemoryLayout<sockaddr_in>.size)
-			defer { sockref.deinitialize() }
+			defer { sockref.deallocate(capacity: MemoryLayout<sockaddr_in>.size) }
 			
-			let length: Int = Int(source.data)
-			let buffer: [CMTime] = [
+			guard MemoryLayout<CMTime>.size * 3 <= Int(source.data) else {
+				assertionFailure("Invalid bytes length")
+				return
+			}
+			let buffer: Array<CMTime> = [
 				kCMTimeZero, kCMTimeZero, kCMTimeZero,//peer
-				launch, loop.loopingPlayerItems.reduce(player.currentTime()) { CMTimeAdd($0.0, CMTimeMultiplyByRatio($0.1.duration, Int32(loop.loopCount), 1)) }, CMClockGetTime(clock)//self
+				launch, loop.loopingPlayerItems.reduce(player.currentTime()) {
+					CMTimeAdd($0.0, CMTimeMultiplyByRatio($0.1.duration, Int32(loop.loopCount), 1))
+				}, CMClockGetTime(clock)//self
 			]
-			
-			assert(length==MemoryLayout<CMTime>.size*3)
-			
-			assert(recvfrom(sock, UnsafeMutableRawPointer(mutating: buffer), MemoryLayout<CMTime>.size*3, 0, sockref, &socklen)==MemoryLayout<CMTime>.size*3)
-			assert(sendto(sock, UnsafeRawPointer(buffer), MemoryLayout<CMTime>.size*6, 0, sockref, socklen)==MemoryLayout<CMTime>.size*6)
-			
+			guard MemoryLayout<CMTime>.size * 3 == recvfrom(sock, UnsafeMutableRawPointer(mutating: buffer), MemoryLayout<CMTime>.size * 3, 0, sockref, &socklen) else {
+				assertionFailure("e1")
+				return
+			}
+			guard MemoryLayout<CMTime>.size * 6 == sendto(sock, UnsafeRawPointer(buffer), MemoryLayout<CMTime>.size * 6, 0, sockref, socklen) else {
+				assertionFailure("e2")
+				return
+			}
 		}
 		
 		let sockref: UnsafeMutablePointer<sockaddr_in> = UnsafeMutablePointer<sockaddr_in>.allocate(capacity: MemoryLayout<sockaddr_in>.size)
@@ -67,7 +74,9 @@ class YASMP {
 		sockref.pointee.sin_port = port
 		sockref.pointee.sin_addr.s_addr = in_addr_t(0x00000000)
 		
-		assert(0==bind(sock, UnsafeMutablePointer<sockaddr>(OpaquePointer(sockref)), socklen_t(MemoryLayout<sockaddr_in>.size)))
+		guard 0 == bind(sock, UnsafeMutablePointer<sockaddr>(OpaquePointer(sockref)), socklen_t(MemoryLayout<sockaddr_in>.size)) else {
+			fatalError("Port \(port) has been not bind")
+		}
 		
 		source.setEventHandler(handler: recv)
 		source.resume()
@@ -86,15 +95,22 @@ class YASMP {
 		
 		func recv() {
 			
-			let length: Int = Int(source.data)
-			assert(length==MemoryLayout<CMTime>.size*6)
+			guard MemoryLayout<CMTime>.size * 6 <= Int(source.data) else {
+				assertionFailure("Invalid bytes length")
+				return
+			}
 			
-			let buffer: [CMTime] = [
+			let buffer: Array<CMTime> = [
 				kCMTimeZero, kCMTimeZero, kCMTimeZero,//self
 				kCMTimeZero, kCMTimeZero, kCMTimeZero,//peer
-				loop.loopingPlayerItems.reduce(player.currentTime()) { CMTimeAdd($0.0, CMTimeMultiplyByRatio($0.1.duration, Int32(loop.loopCount), 1)) }, CMClockGetTime(clock)//elapsed
+				loop.loopingPlayerItems.reduce(player.currentTime()) {
+					CMTimeAdd($0.0, CMTimeMultiplyByRatio($0.1.duration, Int32(loop.loopCount), 1))
+				}, CMClockGetTime(clock)//elapsed
 			]
-			assert(recvfrom(sock, UnsafeMutableRawPointer(mutating: buffer), MemoryLayout<CMTime>.size*6, 0, nil, nil)==MemoryLayout<CMTime>.size*6)
+			guard MemoryLayout<CMTime>.size * 6 == recvfrom(sock, UnsafeMutableRawPointer(mutating: buffer), MemoryLayout<CMTime>.size * 6, 0, nil, nil) else {
+				assertionFailure("e1")
+				return
+			}
 			
 			//let host: CMTime = buffer[0]
 			let hostSeek: CMTime = CMTimeMultiplyByRatio(CMTimeAdd(buffer[1], buffer[6]), 1, 2)
@@ -130,14 +146,20 @@ class YASMP {
 			sockref.pointee.sin_family = sa_family_t(AF_INET)
 			sockref.pointee.sin_len = __uint8_t(MemoryLayout<sockaddr_in>.size)
 			sockref.pointee.sin_port = port
-			sockref.pointee.sin_addr.s_addr = address.components(separatedBy: ".").enumerated().reduce(UInt32(0)) { $0.0 | ( UInt32($0.1.element) ?? 0 ) << ( UInt32($0.1.offset) << 3 ) }
+			sockref.pointee.sin_addr.s_addr = address.components(separatedBy: ".").enumerated().reduce(UInt32(0)) {
+				$0.0 | ( UInt32($0.1.element) ?? 0 ) << ( UInt32($0.1.offset) << 3 )
+			}
 			
-			let pair: [CMTime] = [
+			let pair: Array<CMTime> = [
 				launch,
-				loop.loopingPlayerItems.reduce(player.currentTime()) { CMTimeAdd($0.0, CMTimeMultiplyByRatio($0.1.duration, Int32(loop.loopCount), 1)) },
-				CMClockGetTime(clock)
+				loop.loopingPlayerItems.reduce(player.currentTime()) {
+					CMTimeAdd($0.0, CMTimeMultiplyByRatio($0.1.duration, Int32(loop.loopCount), 1))
+				}, CMClockGetTime(clock)
 			]
-			assert(sendto(sock, pair, MemoryLayout<CMTime>.size*3, 0, UnsafePointer<sockaddr>(OpaquePointer(sockref)), socklen_t(MemoryLayout<sockaddr_in>.size))==MemoryLayout<CMTime>.size*3)
+			guard MemoryLayout<CMTime>.size * 3 == sendto(sock, pair, MemoryLayout<CMTime>.size * 3, 0, UnsafePointer<sockaddr>(OpaquePointer(sockref)), socklen_t(MemoryLayout<sockaddr_in>.size)) else {
+				assertionFailure("e1")
+				return
+			}
 				
 			timer.resume()
 			
@@ -176,7 +198,7 @@ class YASMP {
 		semaphore.wait()
         func seq(loop: Int, max: Int) -> Array<Int> {
 			var last: Int = 0
-			return (0..<loop).map { (_) in
+			return Array<Void>(repeating: (), count: loop).map {
 				let next: Int = last + Int ( arc4random_uniform ( UInt32( max ) - 1 ) + 1 )
 				defer { last = next }
 				return next
@@ -195,14 +217,15 @@ class YASMP {
 		case let .Server(port):
 			server(loop: AVPlayerLooper(player: player, templateItem: AVPlayerItem(asset: composition)), port: port)
 		case let .Client(port, address, threshold, interval):
-			client(loop: AVPlayerLooper(player: player, templateItem: AVPlayerItem(asset: composition)), port: port, address: address, threshold: threshold, interval: interval)
+			client(loop: AVPlayerLooper(player: player, templateItem: AVPlayerItem(asset: composition)), port: port,
+			       address: address, threshold: threshold, interval: interval)
 		}
 	}
 	public func load(url: URL, mode: Mode, loop: Int, error: ((AVKeyValueStatus)->())?) {
 		
 		func prepare(assets: AVURLAsset) {
 			let composition: AVMutableComposition = AVMutableComposition()
-			(0..<loop).forEach { (_) in
+			Array<Void>(repeating: (), count: loop).forEach {
 				do {
 					let range: CMTimeRange = CMTimeRange(start: kCMTimeZero, duration: assets.duration)
 					try composition.insertTimeRange(range, of: assets, at: composition.duration)
