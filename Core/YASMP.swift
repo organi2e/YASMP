@@ -21,6 +21,7 @@ class YASMP {
 	let player: AVQueuePlayer
 	let clock: CMClock
 	let source: DispatchSourceRead
+	let logger: FileHandle
 	var looper: AVPlayerLooper?
 	var launch: CMTime
 	var layer: AVPlayerLayer {
@@ -29,7 +30,8 @@ class YASMP {
 	var sock: Int32 {
 		return Int32(source.handle)
 	}
-	init() {
+	init(dump: FileHandle) {
+		logger = dump
 		clock = CMClockGetHostTimeClock()
 		player = AVQueuePlayer()
 		player.actionAtItemEnd = .none
@@ -46,7 +48,7 @@ class YASMP {
 			let sockref: UnsafeMutablePointer<sockaddr> = UnsafeMutablePointer<sockaddr>.allocate(capacity: MemoryLayout<sockaddr_in>.size)
 			defer { sockref.deallocate(capacity: MemoryLayout<sockaddr_in>.size) }
 			
-			guard MemoryLayout<CMTime>.size * 3 <= Int(source.data) else {
+			guard MemoryLayout<CMTime>.stride * 3 <= Int(source.data) else {
 				assertionFailure("Invalid bytes length")
 				return
 			}
@@ -56,11 +58,11 @@ class YASMP {
 					CMTimeAdd($0.0, CMTimeMultiplyByRatio($0.1.duration, Int32(loop.loopCount), 1))
 				}, CMClockGetTime(clock)//self
 			]
-			guard MemoryLayout<CMTime>.size * 3 == recvfrom(sock, UnsafeMutableRawPointer(mutating: buffer), MemoryLayout<CMTime>.size * 3, 0, sockref, &socklen) else {
+			guard MemoryLayout<CMTime>.stride * 3 == recvfrom(sock, UnsafeMutableRawPointer(mutating: buffer), MemoryLayout<CMTime>.stride * 3, 0, sockref, &socklen) else {
 				assertionFailure("e1")
 				return
 			}
-			guard MemoryLayout<CMTime>.size * 6 == sendto(sock, UnsafeRawPointer(buffer), MemoryLayout<CMTime>.size * 6, 0, sockref, socklen) else {
+			guard MemoryLayout<CMTime>.stride * 6 == sendto(sock, UnsafeRawPointer(buffer), MemoryLayout<CMTime>.stride * 6, 0, sockref, socklen) else {
 				assertionFailure("e2")
 				return
 			}
@@ -69,7 +71,7 @@ class YASMP {
 		let sockref: UnsafeMutablePointer<sockaddr_in> = UnsafeMutablePointer<sockaddr_in>.allocate(capacity: MemoryLayout<sockaddr_in>.size)
 		defer { sockref.deallocate(capacity: MemoryLayout<sockaddr_in>.size) }
 		
-		sockref.pointee.sin_family = sa_family_t(AF_INET)
+		sockref.pointee.sin_family = sa_family_t(PF_INET)
 		sockref.pointee.sin_len = __uint8_t(MemoryLayout<sockaddr_in>.size)
 		sockref.pointee.sin_port = port
 		sockref.pointee.sin_addr.s_addr = in_addr_t(0x00000000)
@@ -95,7 +97,7 @@ class YASMP {
 		
 		func recv() {
 			
-			guard MemoryLayout<CMTime>.size * 6 <= Int(source.data) else {
+			guard MemoryLayout<CMTime>.stride * 6 <= Int(source.data) else {
 				assertionFailure("Invalid bytes length")
 				return
 			}
@@ -107,7 +109,7 @@ class YASMP {
 					CMTimeAdd($0.0, CMTimeMultiplyByRatio($0.1.duration, Int32(loop.loopCount), 1))
 				}, CMClockGetTime(clock)//elapsed
 			]
-			guard MemoryLayout<CMTime>.size * 6 == recvfrom(sock, UnsafeMutableRawPointer(mutating: buffer), MemoryLayout<CMTime>.size * 6, 0, nil, nil) else {
+			guard MemoryLayout<CMTime>.stride * 6 == recvfrom(sock, UnsafeMutableRawPointer(mutating: buffer), MemoryLayout<CMTime>.stride * 6, 0, nil, nil) else {
 				assertionFailure("e1")
 				return
 			}
@@ -134,6 +136,8 @@ class YASMP {
 				UserDefaults().synchronize()
 			}
 			
+			"recv done@\(Date())\r\n".data(using: .utf8)?.write(to: logger)
+			
 		}
 		
 		func send() {
@@ -143,7 +147,7 @@ class YASMP {
 			let sockref: UnsafeMutablePointer<sockaddr_in> = UnsafeMutablePointer<sockaddr_in>.allocate(capacity: MemoryLayout<sockaddr_in>.size)
 			defer { sockref.deallocate(capacity: MemoryLayout<sockaddr_in>.size) }
 			
-			sockref.pointee.sin_family = sa_family_t(AF_INET)
+			sockref.pointee.sin_family = sa_family_t(PF_INET)
 			sockref.pointee.sin_len = __uint8_t(MemoryLayout<sockaddr_in>.size)
 			sockref.pointee.sin_port = port
 			sockref.pointee.sin_addr.s_addr = address.components(separatedBy: ".").enumerated().reduce(UInt32(0)) {
@@ -156,12 +160,14 @@ class YASMP {
 					CMTimeAdd($0.0, CMTimeMultiplyByRatio($0.1.duration, Int32(loop.loopCount), 1))
 				}, CMClockGetTime(clock)
 			]
-			guard MemoryLayout<CMTime>.size * 3 == sendto(sock, pair, MemoryLayout<CMTime>.size * 3, 0, UnsafePointer<sockaddr>(OpaquePointer(sockref)), socklen_t(MemoryLayout<sockaddr_in>.size)) else {
+			guard MemoryLayout<CMTime>.stride * 3 == sendto(sock, pair, MemoryLayout<CMTime>.stride * 3, 0, UnsafePointer<sockaddr>(OpaquePointer(sockref)), socklen_t(MemoryLayout<sockaddr_in>.size)) else {
 				assertionFailure("e1")
 				return
 			}
 				
 			timer.resume()
+			
+			"send done@\(Date())\r\n".data(using: .utf8)?.write(to: logger)
 			
 		}
 		
@@ -172,6 +178,7 @@ class YASMP {
 		launch = CMClockGetTime(clock)
 		source.resume()
 		timer.resume()
+		
 	}
 	public func load(urls: Array<URL>, mode: Mode, loop: Int, playlist: Array<Int> = Array<Int>(), error: ((AVKeyValueStatus)->())?) {
 		let composition: AVMutableComposition = AVMutableComposition()
@@ -210,17 +217,20 @@ class YASMP {
 				let range: CMTimeRange = CMTimeRange(start: kCMTimeZero, duration: asset.duration)
 				try composition.insertTimeRange(range, of: asset, at: composition.duration)
 			} catch {
-				print("failed inserting")
+				"failed inserting\r\n".data(using: .utf8)?.write(to: logger)
 			}
 		}
+		let looper: AVPlayerLooper = AVPlayerLooper(player: player, templateItem: AVPlayerItem(asset: composition))
 		switch mode {
 		case let .Server(port):
-			server(loop: AVPlayerLooper(player: player, templateItem: AVPlayerItem(asset: composition)), port: port)
+			"player start as server mode\r\n".data(using: .utf8)?.write(to: logger)
+			server(loop: looper, port: port)
 		case let .Client(port, address, threshold, interval):
-			client(loop: AVPlayerLooper(player: player, templateItem: AVPlayerItem(asset: composition)), port: port,
-			       address: address, threshold: threshold, interval: interval)
+			"player start as client mode\r\n".data(using: .utf8)?.write(to: logger)
+			client(loop: looper, port: port, address: address, threshold: threshold, interval: interval)
 		}
 	}
+	/*
 	public func load(url: URL, mode: Mode, loop: Int, error: ((AVKeyValueStatus)->())?) {
 		
 		func prepare(assets: AVURLAsset) {
@@ -230,7 +240,7 @@ class YASMP {
 					let range: CMTimeRange = CMTimeRange(start: kCMTimeZero, duration: assets.duration)
 					try composition.insertTimeRange(range, of: assets, at: composition.duration)
 				} catch {
-					print("failed inserting")
+					"failed inserting\r\n".data(using: .utf8)?.write(to: logger)
 				}
 			}
 			switch mode {
@@ -258,8 +268,8 @@ class YASMP {
 				error?(.cancelled)
 			}
 		}
-		
 	}
+	*/
 	func pause() {
 		launch = kCMTimeZero
 		player.pause()
@@ -267,5 +277,10 @@ class YASMP {
 	func resume() {
 		launch = CMClockGetTime(clock)
 		player.play()
+	}
+}
+private extension Data {
+	func write(to: FileHandle) {
+		to.write(self)
 	}
 }

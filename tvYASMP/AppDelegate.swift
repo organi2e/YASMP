@@ -12,22 +12,28 @@ import UIKit
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
 	var window: UIWindow?
-	let player: YASMP = YASMP()
+	let player: YASMP = YASMP(dump: .standardError)
 
 	func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
 		// Override point for customization after application launch.
-		if let url: URL = Bundle.main.url(forResource: "02", withExtension: "mp4"), let view: UIView = window?.rootViewController?.view {
-			let layer = player.layer
-			layer.frame = view.frame
-			//view.layer.sublayers?.removeAll()
-			view.layer.addSublayer(layer)
-			//player.load(url: url, mode: .Client(port: 9000, address: "192.168.10.137", threshold: 1/60.0, interval: 3)) {
-			player.load(url: url, mode: .Server(port: 9000)) {
-				print($0)
-			}
-		} else {
+		guard
+			let url: URL = URL(string: ""),
+			FileManager.default.fileExists(atPath: url.path),
+			let view: UIView = window?.rootViewController?.view else {
 			assertionFailure()
+			return false
 		}
+		let layer = player.layer
+		layer.frame = view.frame
+		view.layer.sublayers?.removeAll()
+		view.layer.addSublayer(layer)
+		player.load(urls: [url], mode: .Server(port: 9000), loop: 10) {
+			print($0)
+		}
+		/*
+		player.load(urls: [url], mode: .Client(port: 9000, address: "", threshold: 0.1, interval: 3.0), loop: 1024) {
+			print($0)
+		}*/
 		return true
 	}
 

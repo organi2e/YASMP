@@ -20,7 +20,8 @@ let parse: Dictionary<String, Array<Any>> = [
 	"--threshold": [Double(0.3)],
 	"--intervals": [Double(3.0)],
 	"--playlist": [""],
-	"--profile": [""]
+	"--profile": [""],
+	"--dump": [""]
 ]
 let(rest, arguments): (Array<String>, Dictionary<String, Array<Any>>) = getopt(arguments: CommandLine.arguments, parse: parse)
 guard let sync: String = arguments["--sync"]?.first as? String else { fatalError("Invalid --sync") }
@@ -31,6 +32,7 @@ guard let threshold: Double = arguments["--threshold"]?.first as? Double else { 
 guard let intervals: Double = arguments["--intervals"]?.first as? Double else { fatalError("Invalid --intervals") }
 let playlist: Array<Int> = (arguments["--playlist"]?.first as? String)?.components(separatedBy: ",").map { Int($0) ?? 0 } ?? []
 let profile: URL? = arguments["--profile"]?.flatMap { $0 as? String }.filter { FileManager.default.fileExists(atPath: $0) } .map { URL(fileURLWithPath: $0) }.first
+let dump: FileHandle = arguments["--dump"]?.flatMap { $0 as? String }.filter { !$0.isEmpty && ( FileManager.default.fileExists(atPath: $0) || FileManager.default.createFile(atPath: $0, contents: nil, attributes: nil) ) }.map { FileHandle(forUpdatingAtPath: $0) ?? FileHandle.standardError }.first ?? FileHandle.standardError
 let urls: Array<URL> = rest.filter { FileManager.default.fileExists(atPath: $0) }.map { URL(fileURLWithPath: $0) }
 if let screen: NSScreen = NSScreen.main(), urls.count > 0 {
 	if let profile: URL = profile {//Change Color Profile if .icc file distributed
@@ -38,18 +40,19 @@ if let screen: NSScreen = NSScreen.main(), urls.count > 0 {
 		guard let num: UInt32 = screen.deviceDescription[key] as? UInt32 else {
 			fatalError("\(screen.deviceDescription) contains no \(key)")
 		}
-		let r: Bool = ColorSyncDeviceSetCustomProfiles(kColorSyncDisplayDeviceClass.takeUnretainedValue(),
+		guard ColorSyncDeviceSetCustomProfiles(kColorSyncDisplayDeviceClass.takeUnretainedValue(),
 		                                               CGDisplayCreateUUIDFromDisplayID(num).takeUnretainedValue(),
 		                                               [(kColorSyncDeviceDefaultProfileID.takeUnretainedValue() as String): (profile as CFURL),
 		                                                (kColorSyncProfileUserScope.takeUnretainedValue() as String): (kCFPreferencesCurrentUser as String)]
-														as CFDictionary)
-		assert(r)
+														as CFDictionary) else {
+			fatalError("Profile \(profile) is not compatible for \(screen.deviceDescription)")
+		}
 	}
 	
 	let app: NSApplication = NSApplication.shared()
 	let view: NSView = NSView()
 	
-	let player: YASMP = YASMP()
+	let player: YASMP = YASMP(dump: dump)
 	let layer = player.layer
 	
 	view.frame = screen.frame
