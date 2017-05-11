@@ -183,10 +183,11 @@ class YASMP {
 	public func load(urls: Array<URL>, mode: Mode, loop: Int, playlist: Array<Int> = Array<Int>(), error: ((AVKeyValueStatus)->())?) {
 		let composition: AVMutableComposition = AVMutableComposition()
 		let assets: Array<AVURLAsset> = urls.map { AVURLAsset(url: $0) }
-		let semaphore: DispatchSemaphore = DispatchSemaphore(value: assets.count)
+		let group: DispatchGroup = DispatchGroup()
 		assets.forEach {
 			let assets: AVURLAsset = $0
 			let key: String = "tracks"
+			group.enter()
 			assets.loadValuesAsynchronously(forKeys: [key]) {
 				switch assets.statusOfValue(forKey: key, error: nil) {
 				case .cancelled:
@@ -194,7 +195,7 @@ class YASMP {
 				case .failed:
 					error?(.failed)
 				case .loaded:
-					semaphore.signal()
+					group.leave()
 				case .loading:
 					break
 				case .unknown:
@@ -202,7 +203,7 @@ class YASMP {
 				}
 			}
 		}
-		semaphore.wait()
+		group.wait()
 		func seq(loop: Int, max: Int) -> Array<Int> {
 			var last: Int = 0
 			return Array<Void>(repeating: (), count: loop).map {
