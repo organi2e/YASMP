@@ -31,8 +31,17 @@ let lock: Bool = arguments["--lock"]?.isEmpty == false
 guard let threshold: Double = arguments["--threshold"]?.first as? Double else { fatalError("Invalid --threshold") }
 guard let intervals: Double = arguments["--intervals"]?.first as? Double else { fatalError("Invalid --intervals") }
 let playlist: Array<Int> = (arguments["--playlist"]?.first as? String)?.components(separatedBy: ",").map { Int($0) ?? 0 } ?? []
-let profile: URL? = arguments["--profile"]?.flatMap { $0 as? String }.filter { FileManager.default.fileExists(atPath: $0) } .map { URL(fileURLWithPath: $0) }.first
-let dump: FileHandle = arguments["--dump"]?.flatMap { $0 as? String }.filter { !$0.isEmpty && ( FileManager.default.fileExists(atPath: $0) || FileManager.default.createFile(atPath: $0, contents: nil, attributes: nil) ) }.map { FileHandle(forUpdatingAtPath: $0) ?? FileHandle.standardError }.first ?? FileHandle.standardError
+let profile: URL? = arguments["--profile"]?
+	.flatMap { $0 as? String }
+	.filter { FileManager.default.fileExists(atPath: $0) }
+	.map { URL(fileURLWithPath: $0) }
+	.first
+let dump: FileHandle = arguments["--dump"]?
+	.flatMap { $0 as? String }
+	.map { $0 + String(describing: Date()) }
+	.filter { !$0.isEmpty && ( FileManager.default.fileExists(atPath: $0) || FileManager.default.createFile(atPath: $0, contents: nil, attributes: nil) ) }
+	.map { FileHandle(forWritingAtPath: $0) ?? FileHandle.standardError }
+	.first ?? FileHandle.standardError
 let urls: Array<URL> = rest.filter { FileManager.default.fileExists(atPath: $0) }.map { URL(fileURLWithPath: $0) }
 if let screen: NSScreen = NSScreen.main(), urls.count > 0 {
 	if let profile: URL = profile {//Change Color Profile if .icc file distributed
@@ -41,9 +50,9 @@ if let screen: NSScreen = NSScreen.main(), urls.count > 0 {
 			fatalError("\(screen.deviceDescription) contains no \(key)")
 		}
 		guard ColorSyncDeviceSetCustomProfiles(kColorSyncDisplayDeviceClass.takeUnretainedValue(),
-		                                               CGDisplayCreateUUIDFromDisplayID(num).takeUnretainedValue(),
-		                                               [(kColorSyncDeviceDefaultProfileID.takeUnretainedValue() as String): (profile as CFURL),
-		                                                (kColorSyncProfileUserScope.takeUnretainedValue() as String): (kCFPreferencesCurrentUser as String)]
+		                                       CGDisplayCreateUUIDFromDisplayID(num).takeUnretainedValue(),
+		                                       [(kColorSyncDeviceDefaultProfileID.takeUnretainedValue() as String): (profile as CFURL),
+		                                        (kColorSyncProfileUserScope.takeUnretainedValue() as String): (kCFPreferencesCurrentUser as String)]
 														as CFDictionary) else {
 			fatalError("Profile \(profile) is not compatible for \(screen.deviceDescription)")
 		}
