@@ -23,13 +23,14 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXCopyFilesBuildPhase section */
-		879F2C241D910D5E006DFB8B /* CopyFiles */ = {
+		879F2C241D910D5E006DFB8B /* Copy Files */ = {
 			isa = PBXCopyFilesBuildPhase;
 			buildActionMask = 2147483647;
 			dstPath = /usr/share/man/man1/;
 			dstSubfolderSpec = 0;
 			files = (
 			);
+			name = "Copy Files";
 			runOnlyForDeploymentPostprocessing = 1;
 		};
 /* End PBXCopyFilesBuildPhase section */
@@ -182,7 +183,7 @@
 			buildConfigurationList = 879F2C2C1D910D5E006DFB8B /* Build configuration list for PBXNativeTarget "YASMP" */;
 			buildPhases = (
 				879F2C221D910D5E006DFB8B /* Sources */,
-				879F2C241D910D5E006DFB8B /* CopyFiles */,
+				879F2C241D910D5E006DFB8B /* Copy Files */,
 				879F2C231D910D5E006DFB8B /* Frameworks */,
 			);
 			buildRules = (
