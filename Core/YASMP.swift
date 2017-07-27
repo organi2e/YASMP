@@ -8,225 +8,216 @@
 import AVFoundation
 import MultipeerConnectivity
 import os.log
-
-class YASMP {
-	enum Mode {
-		case Server(port: UInt16)
-		case Client(port: UInt16, address: String, threshold: Double, interval: Double)
+class YASMP: NSObject {
+	public enum Mode {
+		case shuffle(_: Int)
+		case playlist(_: Array<Int>)
 	}
-	enum Item {
-		case Single(url: URL)
-		case Shuffle(urls: Array<URL>)
-		case Sequence(urls: Array<URL>, playlist: Array<Int>)
-	}
+	let master: CMClock
 	let player: AVQueuePlayer
-	let clock: CMClock
-	let timer: DispatchSourceTimer
-	let source: DispatchSourceRead
-	var launch: CMTime
+	let looper: AVPlayerLooper
+	let session: MCSession
+	let advertiser: MCNearbyServiceAdvertiser
+	let browser: MCNearbyServiceBrowser
+	let source: DispatchSourceTimer
+	let threshold: Double
+	let divisor: Int32
+	let full: CMTime
+	let half: CMTime
+	let myself: MCPeerID
+	var follow: MCPeerID
+	var peerAnchor: CMTime
+	var selfAnchor: CMTime
+	var delay: CMTime
 	var layer: AVPlayerLayer {
 		return AVPlayerLayer(player: player)
 	}
-	init() {
-		clock = CMClockGetHostTimeClock()
+	init(urls: Array<URL>, mode: Mode,
+	     interval: Double,
+	     average: Int,
+	     service: String = "YASMP") throws {
+		let assets: Array<AVURLAsset> = urls.map(AVURLAsset.init)
+		let maxfps: Double = Double(assets.reduce([], { $0 + $1.tracks }).reduce(1, { max($0, $1.nominalFrameRate )}))
+		let index: Array<Int> = {
+			switch $0 {
+			case let .playlist(index):
+				return index
+			case let .shuffle(count):
+				return rndseq(count: count, range: UInt32(assets.count))
+			}
+		} ( mode )
+		let composition: AVComposition = try index.reduce(AVMutableComposition()) {
+			try $0.insertTimeRange(CMTimeRange(start: kCMTimeZero, duration: assets[$1].duration), of: assets[$1], at: $0.duration)
+			return $0
+		}
+		full = composition.duration
+		half = CMTimeMultiplyByRatio(full, 1, 2)
 		player = AVQueuePlayer()
-		player.actionAtItemEnd = .none
-		player.masterClock = clock
+		looper = AVPlayerLooper(player: player, templateItem: AVPlayerItem(asset: composition))
+		master = CMClockGetHostTimeClock()
+		myself = MCPeerID(displayName: UUID().uuidString)
+		follow = myself
+		session = MCSession(peer: myself, securityIdentity: nil, encryptionPreference: .none)
+		advertiser = MCNearbyServiceAdvertiser(peer: myself, discoveryInfo: nil, serviceType: service)
+		browser = MCNearbyServiceBrowser(peer: myself, serviceType: service)
+		source = DispatchSource.makeTimerSource(flags: .strict, queue: .global(qos: .userInteractive))
+		threshold = 1 / maxfps
+		divisor = Int32(average)
+		delay = kCMTimeZero
+		selfAnchor = kCMTimeZero
+		peerAnchor = kCMTimeZero
+		super.init()
+		//player.actionAtItemEnd = .none
+		player.masterClock = master
 		player.automaticallyWaitsToMinimizeStalling = false
-		source = DispatchSource.makeReadSource(fileDescriptor: socket(PF_INET, SOCK_DGRAM, IPPROTO_UDP), queue: .global(qos: .userInteractive))
-		timer = DispatchSource.makeTimerSource(flags: .strict, queue: .global(qos: .default))
-		launch = kCMTimeZero
+		source.setEventHandler(handler: check)
+		source.scheduleRepeating(deadline: .now(), interval: interval)
+		advertiser.delegate = self
+		browser.delegate = self
+		session.delegate = self
+		advertiser.startAdvertisingPeer()
+		browser.startBrowsingForPeers()
 	}
 	deinit {
+		browser.stopBrowsingForPeers()
+		advertiser.stopAdvertisingPeer()
 		player.pause()
-		timer.cancel()
 		source.cancel()
-		close(Int32(source.handle))
 	}
-	private func server(loop: AVPlayerLooper, port: UInt16) {
-		func recv() {
-			if let error: Error = loop.error {
-				os_log("loop error %@", log: .default, type: .fault, String(describing: error))
-				abort()
-			}
-			guard MemoryLayout<CMTime>.stride * 3 <= Int(source.data) else {
-				os_log("Invalid available byte length", log: .default, type: .error)
-				return
-			}
-			Data(count: MemoryLayout<sockaddr_in>.size).withUnsafeBytes { (ref: UnsafePointer<sockaddr>) in
-				let sockref: UnsafeMutablePointer<sockaddr> = UnsafeMutablePointer<sockaddr>(mutating: ref)
-				let buffer: Array<CMTime> = [
-					kCMTimeZero, kCMTimeZero, kCMTimeZero,//peer
-					launch, player.currentTime(), CMClockGetTime(clock)//self
-				]
-				var socklen: socklen_t = socklen_t(MemoryLayout<sockaddr_in>.size)
-				guard MemoryLayout<CMTime>.stride * 3 == recvfrom(Int32(source.handle), UnsafeMutableRawPointer(mutating: buffer), MemoryLayout<CMTime>.stride * 3, 0, sockref, &socklen) else {
-					os_log("Invalid recv byte length", log: .default, type: .error)
-					return
-				}
-				guard MemoryLayout<CMTime>.stride * 6 == sendto(Int32(source.handle), buffer, MemoryLayout<CMTime>.stride * 6, 0, sockref, socklen) else {
-					os_log("Invalid sent byte length", log: .default, type: .error)
-					return
-				}
-			}
-		}
-		let bound: Bool = Data(count: MemoryLayout<sockaddr_in>.size).withUnsafeBytes { (ref: UnsafePointer<sockaddr_in>) -> Bool in
-			let sockref: UnsafeMutablePointer<sockaddr_in> = UnsafeMutablePointer<sockaddr_in>(mutating: ref)
-			sockref.pointee.sin_family = sa_family_t(PF_INET)
-			sockref.pointee.sin_len = __uint8_t(MemoryLayout<sockaddr_in>.size)
-			sockref.pointee.sin_port = port
-			sockref.pointee.sin_addr.s_addr = in_addr_t(0x00000000)
-			return 0 == sockref.withMemoryRebound(to: sockaddr.self, capacity: 1) {
-				bind(Int32(source.handle), $0, socklen_t(MemoryLayout<sockaddr_in>.size))
-			}
-		}
-		guard bound else {
-			os_log("port %@ has been not bind", log: .default, type: .fault, port)
-			abort()
-		}
-		
-		source.setEventHandler(handler: recv)
-		source.resume()
-		
-		launch = CMClockGetTime(clock)
-		player.play()
-		
-	}
-	private func client(duration: CMTime, loop: AVPlayerLooper, port: UInt16, address: String, threshold: Double, interval: Double) {
-		
-		let full: CMTime = duration
-		let half: CMTime = CMTimeMultiplyByRatio(full, 1, 2)
-		
-		var prev: CMTime = kCMTimeZero
-		var hostAnchor: CMTime = kCMTimeZero
-		var peerAnchor: CMTime = kCMTimeZero
-		
-		func recv() {
-			guard MemoryLayout<CMTime>.stride * 6 <= Int(source.data) else {
-				os_log("Invalid available byte length", log: .default, type: .error)
-				return
-			}
-			let buffer: Array<CMTime> = [
-				kCMTimeZero, kCMTimeZero, kCMTimeZero,//self
-				kCMTimeZero, kCMTimeZero, kCMTimeZero,//peer
-				player.currentTime(), CMClockGetTime(clock)//elapsed
-			]
-			guard MemoryLayout<CMTime>.stride * 6 == recvfrom(Int32(source.handle), UnsafeMutableRawPointer(mutating: buffer), MemoryLayout<CMTime>.stride * 6, 0, nil, nil) else {
-				assertionFailure("e1")
-				return
-			}
-			
-			//let host: CMTime = buffer[0]
-			let hostSeek: CMTime = CMTimeMultiplyByRatio(CMTimeAdd(buffer[1], buffer[6]), 1, 2)
-			let hostTime: CMTime = CMTimeMultiplyByRatio(CMTimeAdd(buffer[2], buffer[7]), 1, 2)
-			let peer: CMTime = buffer[3]
-			let peerSeek: CMTime = buffer[4]
-			let peerTime: CMTime = buffer[5]
-			
-			if player.status == .readyToPlay && threshold < CMTimeGetSeconds(CMTimeAbsoluteValue(CMTimeSubtract(CMTimeModApprox(CMTimeAdd(CMTimeSubtract(peerSeek, hostSeek), half), full), half))) {
-				player.setRate(Float(UserDefaults().double(forKey: address)), time: peerSeek, atHostTime: hostTime)
-			}
-			if 0 != CMTimeCompare(peer, prev) {
-				hostAnchor = hostTime
-				peerAnchor = peerTime
-				prev = peer
-			} else {
-				let hostInterval: CMTime = CMTimeSubtract(hostTime, hostAnchor)
-				let peerInterval: CMTime = CMTimeSubtract(peerTime, peerAnchor)
-				UserDefaults().set((Double(peerInterval.value)/Double(hostInterval.value))*(Double(hostInterval.timescale)/Double(peerInterval.timescale)), forKey: address)
-				os_log("adjust rate to %@", log: .default, type: .default, UserDefaults().double(forKey: address))
-			}
-			os_log("recv done", log: .default, type: .info)
-		}
-		func send() {
-			let sent: Int = Data(count: MemoryLayout<sockaddr_in>.size).withUnsafeBytes { (ref: UnsafePointer<sockaddr_in>) -> Int in
-				let sockref: UnsafeMutablePointer<sockaddr_in> = UnsafeMutablePointer<sockaddr_in>(mutating: ref)
-				sockref.pointee.sin_family = sa_family_t(PF_INET)
-				sockref.pointee.sin_len = __uint8_t(MemoryLayout<sockaddr_in>.size)
-				sockref.pointee.sin_port = port
-				sockref.pointee.sin_addr.s_addr = address.components(separatedBy: ".").enumerated().reduce(UInt32(0)) {
-					$0.0 | ( UInt32($0.1.element) ?? 0 ) << ( UInt32($0.1.offset) << 3 )
-				}
-				return sockref.withMemoryRebound(to: sockaddr.self, capacity: 1) {
-					sendto(Int32(source.handle), Array<CMTime>(arrayLiteral: launch, player.currentTime(), CMClockGetTime(clock)), MemoryLayout<CMTime>.stride * 3, 0, $0, socklen_t(MemoryLayout<sockaddr_in>.size))
-				}
-			}
-			guard sent == MemoryLayout<CMTime>.size * 3 else {
-				os_log("receive invalid message", log: .default, type: .error)
-				return
-			}
-			os_log("send done", log: .default, type: .info)
-		}
-		
-		source.setEventHandler(handler: recv)
-		timer.scheduleRepeating(deadline: .now(), interval: interval)
-		timer.setEventHandler(handler: send)
-		
-		launch = CMClockGetTime(clock)
-		source.resume()
-		timer.resume()
-		
-		player.play()
-		
-	}
-	public func load(urls: Array<URL>, mode: Mode, loop: Int, playlist: Array<Int> = Array<Int>(), error: ((AVKeyValueStatus)->())?) {
-		let composition: AVMutableComposition = AVMutableComposition()
-		let assets: Array<AVURLAsset> = urls.map { AVURLAsset(url: $0) }
-		let group: DispatchGroup = DispatchGroup()
-		assets.forEach {
-			let assets: AVURLAsset = $0
-			let key: String = "tracks"
-			group.enter()
-			assets.loadValuesAsynchronously(forKeys: [key]) {
-				switch assets.statusOfValue(forKey: key, error: nil) {
-				case .cancelled:
-					error?(.cancelled)
-				case .failed:
-					error?(.failed)
-				case .loaded:
-					group.leave()
-				case .loading:
-					break
-				case .unknown:
-					error?(.unknown)
-				}
-			}
-		}
-		group.wait()
-		func seq(loop: Int, max: Int) -> Array<Int> {
-			var last: Int = Int(arc4random_uniform(UInt32(max)))
-			return Array<Void>(repeating: (), count: loop).map {
-				let next: Int = last + Int ( arc4random_uniform ( UInt32( max ) - 1 ) + 1 )
-				defer { last = next }
-				return next
-			}
-		}
-		( playlist.isEmpty ? seq(loop: loop, max: assets.count ) : playlist ).forEach {
-			let asset: AVURLAsset = assets [ $0 % assets.count ]
-			do {
-				let range: CMTimeRange = CMTimeRange(start: kCMTimeZero, duration: asset.duration)
-				try composition.insertTimeRange(range, of: asset, at: composition.duration)
-			} catch {
-				os_log("failed inserting %@", log: .default, type: .error, asset)
-			}
-		}
-		let loop: AVPlayerLooper = AVPlayerLooper(player: player, templateItem: AVPlayerItem(asset: composition))
-		switch mode {
-		case let .Server(port):
-			os_log("player starts as server mode", log: .default, type: .info)
-			server(loop: loop, port: port)
-		case let .Client(port, address, threshold, interval):
-			os_log("player starts as client mode", log: .default, type: .info)
-			client(duration: composition.duration, loop: loop, port: port, address: address, threshold: threshold, interval: interval)
-		}
-	}
+}
+extension YASMP {
 	func pause() {
-		launch = kCMTimeZero
+		source.suspend()
 		player.pause()
 	}
 	func resume() {
-		launch = CMClockGetTime(clock)
 		player.play()
+		source.resume()
+	}
+}
+extension YASMP {
+	func check() {
+		guard let dwarf: MCPeerID = session.connectedPeers.sorted(by: {$0.displayName < $1.displayName}).first, dwarf.displayName < myself.displayName else {
+			return
+		}
+		let playedTime: CMTime = player.currentTime()
+		let masterTime: CMTime = CMClockGetTime(master)
+		let data: Data = Data(count: 6 * MemoryLayout<CMTime>.stride)
+		data.withUnsafeBytes { (ref: UnsafePointer<CMTime>) in
+			let mutating: UnsafeMutablePointer<CMTime> = UnsafeMutablePointer<CMTime>(mutating: ref)
+			mutating[0] = playedTime
+			mutating[1] = masterTime
+			mutating[4] = kCMTimeZero
+			mutating[5] = UnsafeBufferPointer<CMTime>(start: ref, count: 4).reduce(kCMTimeZero, CMTimeAdd)
+		}
+		do {
+			try session.send(data, toPeers: Array<MCPeerID>(repeating: dwarf, count: 1), with: .unreliable)
+		} catch {
+			os_log("%s", log: facility, type: .error, error.localizedDescription)
+		}
+	}
+}
+extension YASMP: MCNearbyServiceAdvertiserDelegate {
+	func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
+		os_log("join to %s", log: facility, type: .debug, peerID.displayName)
+		invitationHandler(myself.displayName < peerID.displayName, session)
+	}
+	func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) {
+		os_log("critical error %s", log: facility, type: .error, error.localizedDescription)
+	}
+}
+extension YASMP: MCNearbyServiceBrowserDelegate {
+	func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String : String]?) {
+		os_log("found peer %s", log: facility, type: .debug, peerID.displayName)
+		guard peerID.displayName < session.connectedPeers.reduce(myself.displayName, { min($0, $1.displayName) }) else { return }
+		session.connectedPeers.forEach(session.cancelConnectPeer)
+		browser.invitePeer(peerID, to: session, withContext: nil, timeout: 0)
+	}
+	func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
+		os_log("lost peer %s", log: facility, type: .debug, peerID.displayName)
+	}
+	func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) {
+		os_log("critical error %s", log: facility, type: .fault, error.localizedDescription)
+	}
+}
+extension YASMP: MCSessionDelegate {
+	func session(_ session: MCSession, didReceiveCertificate certificate: [Any]?, fromPeer peerID: MCPeerID, certificateHandler: @escaping (Bool) -> Void) {
+		certificateHandler(true)
+	}
+	func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
+		switch state {
+		case .connecting:
+			os_log("connecting to %s", log: facility, type: .debug, peerID.displayName)
+		case .connected:
+			os_log("connected to %s", log: facility, type: .debug, peerID.displayName)
+			guard peerID.displayName < myself.displayName else { return }
+			os_log("stop browsing", log: facility, type: .debug)
+			browser.stopBrowsingForPeers()
+		case .notConnected:
+			os_log("not connected to %s", log: facility, type: .debug, peerID.displayName)
+			guard peerID.displayName < myself.displayName else { return }
+			os_log("restart browsing", log: facility, type: .debug)
+			browser.startBrowsingForPeers()
+		}
+	}
+	func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
+		guard data.count == 6 * MemoryLayout<CMTime>.stride else {
+			os_log("incorrect byte %d", log: facility, type: .error, data.count)
+			return
+		}
+		let playedTime: CMTime = player.currentTime()
+		let masterTime: CMTime = CMClockGetTime(master)
+		data.withUnsafeBytes { (ref: UnsafePointer<CMTime>) in
+			guard ref[5] == UnsafeBufferPointer<CMTime>(start: ref, count: 4).reduce(kCMTimeZero, CMTimeAdd) else {
+				os_log("incorrect data", log: facility, type: .error)
+				return
+			}
+			switch ref[4] {
+				case kCMTimeZero:
+					let mutating: UnsafeMutablePointer<CMTime> = UnsafeMutablePointer<CMTime>(mutating: ref)
+					mutating[2] = playedTime
+					mutating[3] = masterTime
+					mutating[4] = kCMTimeInvalid
+					mutating[5] = UnsafeBufferPointer<CMTime>(start: ref, count: 4).reduce(kCMTimeZero, CMTimeAdd)
+					do {
+						try session.send(data, toPeers: Array<MCPeerID>(repeating: peerID, count: 1), with: .unreliable)
+					} catch {
+						os_log("%s", log: facility, type: .error, error.localizedDescription)
+					}
+				case kCMTimeInvalid:
+					let selfPlayedTime: CMTime = CMTimeMultiplyByRatio(CMTimeAdd(playedTime, ref[0]), 1, 2)
+					let selfMasterTime: CMTime = CMTimeMultiplyByRatio(CMTimeAdd(masterTime, ref[1]), 1, 2)
+					let peerPlayedTime: CMTime = ref[2]
+					let peerMasterTime: CMTime = ref[3]
+					let delta: CMTime = CMTimeSubtract(CMTimeModApprox(CMTimeAdd(CMTimeSubtract(peerPlayedTime, selfPlayedTime), half), full), half)
+					guard follow == peerID else {
+						selfAnchor = selfMasterTime
+						peerAnchor = peerMasterTime
+						follow = peerID
+						delay = delta
+						return
+					}
+					delay = CMTimeAdd(CMTimeMultiplyByRatio(delta, 1, divisor), CMTimeMultiplyByRatio(delay, divisor - 1, divisor))
+					guard threshold < CMTimeGetSeconds(CMTimeAbsoluteValue(delay)) else { return }
+					let selfElapsed: CMTime = CMTimeSubtract(selfMasterTime, selfAnchor)
+					let peerElapsed: CMTime = CMTimeSubtract(peerMasterTime, peerAnchor)
+					let rate: Double = Double(peerElapsed.value) / Double(selfElapsed.value) * Double(selfElapsed.timescale) / Double(peerElapsed.timescale)
+					player.setRate(Float(rate), time: peerPlayedTime, atHostTime: selfMasterTime)
+					os_log("Adjust rate %lf for delay %lf sec", log: facility, type: .info, rate, CMTimeGetSeconds(delta))
+					delay = kCMTimeZero
+				default:
+					break
+			}
+		}
+	}
+	func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
+		//nop
+	}
+	func session(_ session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, with progress: Progress) {
+		//nop
+	}
+	func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL, withError error: Error?) {
+		//nop
 	}
 }
 private func gcd<T: Integer>(_ m: T, _ n: T) -> T {
@@ -247,3 +238,9 @@ private func CMTimeModApprox(_ x: CMTime, _ y: CMTime) -> CMTime {
 		(x.value, y.value * Int64(x.timescale) / Int64(y.timescale), x.timescale)
 	return CMTime(value: ((xv%yv)+yv)%yv, timescale: ts)
 }
+private func rndseq(count: Int, range: UInt32, last: UInt32? = nil) -> Array<Int> {
+	guard 0 < count else { return Array<Int>() }
+	let next: UInt32 = ( ( last ?? arc4random_uniform(range)) + arc4random_uniform(range-1) + 1 ) % range
+	return Array<Int>(repeating: Int(next), count: 1) + rndseq(count: count - 1, range: range, last: next)
+}
+private let facility: OSLog = OSLog(subsystem: "YASMP", category: "Core")

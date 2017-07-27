@@ -7,6 +7,7 @@
 //
 
 import Foundation
+import AVFoundation
 
 func getopt (arguments: Array<String>, parse: Dictionary<String,Array<Any>>) -> (Array<String>, Dictionary<String,Array<Any>>) {
 	var keys: Dictionary<String, Array<Any>> = parse

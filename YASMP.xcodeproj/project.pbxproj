@@ -7,7 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		8711ED8E1E5AC3BA0065B88C /* getopt.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8711ED8B1E5AC3BA0065B88C /* getopt.swift */; };
+		8711ED8E1E5AC3BA0065B88C /* misc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8711ED8B1E5AC3BA0065B88C /* misc.swift */; };
 		872EEAB91D89317400C1C1F0 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 872EEAB81D89317400C1C1F0 /* AppDelegate.swift */; };
 		872EEABB1D89317400C1C1F0 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 872EEABA1D89317400C1C1F0 /* ViewController.swift */; };
 		872EEABD1D89317400C1C1F0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 872EEABC1D89317400C1C1F0 /* Assets.xcassets */; };
@@ -36,7 +36,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		8711ED8B1E5AC3BA0065B88C /* getopt.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = getopt.swift; path = Core/getopt.swift; sourceTree = "<group>"; };
+		8711ED8B1E5AC3BA0065B88C /* misc.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = misc.swift; path = Core/misc.swift; sourceTree = "<group>"; };
 		872EEAB61D89317400C1C1F0 /* macYASMP.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = macYASMP.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		872EEAB81D89317400C1C1F0 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		872EEABA1D89317400C1C1F0 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -136,7 +136,7 @@
 			isa = PBXGroup;
 			children = (
 				87D6F74F1D87BE73003339BD /* YASMP.swift */,
-				8711ED8B1E5AC3BA0065B88C /* getopt.swift */,
+				8711ED8B1E5AC3BA0065B88C /* misc.swift */,
 			);
 			name = Core;
 			sourceTree = "<group>";
@@ -286,7 +286,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				879F2C291D910D5E006DFB8B /* main.swift in Sources */,
-				8711ED8E1E5AC3BA0065B88C /* getopt.swift in Sources */,
+				8711ED8E1E5AC3BA0065B88C /* misc.swift in Sources */,
 				879F2C2D1D910D81006DFB8B /* YASMP.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

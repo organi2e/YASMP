@@ -7,75 +7,55 @@
 //
 
 import Cocoa
-import CoreFoundation
-import CoreGraphics
-import Quartz
-import QuartzCore
 import os.log
-
+extension NSScreen {
+	func apply(profile: URL) -> Bool {
+		guard let num: UInt32 = deviceDescription["NSScreenNumber"] as? UInt32 else { return false }
+		return ColorSyncDeviceSetCustomProfiles(kColorSyncDisplayDeviceClass.takeUnretainedValue(),
+		                                        CGDisplayCreateUUIDFromDisplayID(num).takeUnretainedValue(),
+		                                        [(kColorSyncDeviceDefaultProfileID.takeUnretainedValue() as String): (profile as URL),
+		                                         (kColorSyncProfileUserScope.takeUnretainedValue() as String): (kCFPreferencesCurrentUser as String)]as CFDictionary)
+	}
+}
 let parse: Dictionary<String, Array<Any>> = [
-	"--sync": [""],
-	"--port": [UInt16(9000)],
-	"--loop": [1],
-	"--lock": [],
-	"--threshold": [Double(0.3)],
-	"--intervals": [Double(3.0)],
+	"--identifier": ["YASMP"],
+	"--interval": [Double(6.0)],
 	"--playlist": [""],
+	"--loop": [1],
 	"--profile": [""],
-	"--dump": [""],
+	"--average": [12],
+	"--lock": []
 ]
 let(rest, arguments): (Array<String>, Dictionary<String, Array<Any>>) = getopt(arguments: CommandLine.arguments, parse: parse)
-guard let sync: String = arguments["--sync"]?.first as? String else { fatalError("Invalid --sync") }
-guard let port: UInt16 = arguments["--port"]?.first as? UInt16 else { fatalError("Invalid --port") }
-guard let loop: Int = arguments["--loop"]?.first as? Int else { fatalError("Invalid --loop") }
+guard let service: String = arguments["--identifier"]?.first as? String else { abort() }
+guard let average: Int = arguments["--average"]?.first as? Int else { abort() }
+guard let interval: Double = arguments["--interval"]?.first as? Double else { abort() }
+//guard let playlist: Array<Int> = (arguments["--playlist"]?.first? as? String)?.components(separatedBy: ",").flatMap { Int($0) } ?? [Int]()
+guard let loop: Int = arguments["--loop"]?.first as? Int else { abort() }
 let lock: Bool = arguments["--lock"]?.isEmpty == false
-guard let threshold: Double = arguments["--threshold"]?.first as? Double else { fatalError("Invalid --threshold") }
-guard let intervals: Double = arguments["--intervals"]?.first as? Double else { fatalError("Invalid --intervals") }
-let playlist: Array<Int> = (arguments["--playlist"]?.first as? String)?.components(separatedBy: ",").map { Int($0) ?? 0 } ?? []
-let profile: URL? = arguments["--profile"]?
-	.flatMap { $0 as? String }
-	.filter { FileManager.default.fileExists(atPath: $0) }
-	.map { URL(fileURLWithPath: $0) }
-	.first
+let profile: URL? = arguments["--profile"]?.flatMap{$0 as?String}.filter{FileManager.default.fileExists(atPath: $0)}.map{URL(fileURLWithPath: $0)}.first
 let urls: Array<URL> = rest.filter { FileManager.default.fileExists(atPath: $0) }.map { URL(fileURLWithPath: $0) }
-if let screen: NSScreen = NSScreen.main(), urls.count > 0 {
-	if let profile: URL = profile {//Change Color Profile if .icc file distributed
-		let key: String = "NSScreenNumber"
-		guard let num: UInt32 = screen.deviceDescription[key] as? UInt32 else {
-			os_log("%@ contains no %@", log: .default, type: .fault, screen.deviceDescription, key)
-			fatalError()
-		}
-		guard ColorSyncDeviceSetCustomProfiles(kColorSyncDisplayDeviceClass.takeUnretainedValue(),
-		                                       CGDisplayCreateUUIDFromDisplayID(num).takeUnretainedValue(),
-		                                       [(kColorSyncDeviceDefaultProfileID.takeUnretainedValue() as String): (profile as CFURL),
-		                                        (kColorSyncProfileUserScope.takeUnretainedValue() as String): (kCFPreferencesCurrentUser as String)]
-														as CFDictionary) else {
-			os_log("Profile %@ is not compatible for %@", log: .default, type: .fault, profile.absoluteString, screen.deviceDescription)
-			fatalError()
-		}
-	}
-	
+do {
 	let app: NSApplication = NSApplication.shared()
-	let view: NSView = NSView()
+	guard let screen: NSScreen = NSScreen.main() else {
+		throw NSError(domain: #function, code: #line, userInfo: nil)
+	}
+	if let profile: URL = profile {
+		guard screen.apply(profile: profile) else { abort() }
+	}
+	let yasmp: YASMP = try YASMP(urls: urls, mode: .shuffle(loop), interval: interval, average: average, service: service)
+	let view: NSView = NSView(frame: screen.frame)
 	
-	let player: YASMP = YASMP()
-	let layer = player.layer
-	
-	view.frame = screen.frame
+	view.layer = yasmp.layer
+	view.layer?.frame = view.frame
+	view.wantsLayer = true
 	view.enterFullScreenMode(screen, withOptions: nil)
 	
-	layer.frame = view.frame
+	yasmp.resume()
 	
-	view.layer = layer
-	view.wantsLayer = true
-	
-	let mode: YASMP.Mode = sync.isEmpty ? .Server(port: port) : .Client(port: port, address: sync, threshold: threshold, interval: intervals)
-	player.load(urls: urls, mode: mode, loop: loop) {
-		fatalError(String(describing: $0))
-	}
 	if !lock {
 		NSEvent.addLocalMonitorForEvents(matching: NSEventMask.keyDown) {
-			if $0.modifierFlags.contains(NSEventModifierFlags.command) && $0.charactersIgnoringModifiers == "q" {
+			if $0.modifierFlags.contains(NSEventModifierFlags.command), $0.charactersIgnoringModifiers == "q" {
 				app.terminate(app)
 			}
 			return $0
@@ -83,5 +63,6 @@ if let screen: NSScreen = NSScreen.main(), urls.count > 0 {
 	}
 	NSCursor.hide()
 	app.run()
+} catch {
+	os_log("%s", log: .default, type: .fault, error.localizedDescription)
 }
-
