@@ -36,7 +36,25 @@ class YASMP: NSObject {
 	     interval: Double,
 	     average: Int,
 	     service: String = "YASMP") throws {
-		let assets: Array<AVURLAsset> = urls.map(AVURLAsset.init)
+		let assets: Array<AVAsset> = urls.map {
+			let asset: AVURLAsset = AVURLAsset(url: $0, options: Dictionary<String, Any>(dictionaryLiteral: (AVURLAssetPreferPreciseDurationAndTimingKey, true)))
+			let key: String = "tracks"
+			let semaphore: DispatchSemaphore = DispatchSemaphore(value: 0)
+			asset.loadValuesAsynchronously(forKeys: Array<String>(repeating: key, count: 1)) {
+				var error: NSError?
+				switch asset.statusOfValue(forKey: key, error: &error) {
+				case .loaded:
+					semaphore.signal()
+				case .loading:
+					os_log("%@", log: facility, type: .debug, error?.localizedDescription ?? #function)
+				case .cancelled, .unknown, .failed:
+					os_log("%@", log: facility, type: .fault, error?.localizedDescription ?? #function)
+					fatalError()
+				}
+			}
+			semaphore.wait()
+			return asset
+		}
 		let maxfps: Double = Double(assets.reduce([], { $0 + $1.tracks }).reduce(1, { max($0, $1.nominalFrameRate )}))
 		let index: Array<Int> = {
 			switch $0 {
@@ -150,14 +168,14 @@ extension YASMP: MCSessionDelegate {
 			os_log("connecting to %s", log: facility, type: .debug, peerID.displayName)
 		case .connected:
 			os_log("connected to %s", log: facility, type: .debug, peerID.displayName)
-			guard peerID.displayName < myself.displayName else { return }
-			os_log("stop browsing", log: facility, type: .debug)
-			browser.stopBrowsingForPeers()
+		//	guard peerID.displayName < myself.displayName else { return }
+		//	os_log("stop browsing", log: facility, type: .debug)
+		//	browser.stopBrowsingForPeers()
 		case .notConnected:
 			os_log("not connected to %s", log: facility, type: .debug, peerID.displayName)
-			guard peerID.displayName < myself.displayName else { return }
-			os_log("restart browsing", log: facility, type: .debug)
-			browser.startBrowsingForPeers()
+		//	guard peerID.displayName < myself.displayName else { return }
+		//	os_log("restart browsing", log: facility, type: .debug)
+		//	browser.startBrowsingForPeers()
 		}
 	}
 	func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
@@ -190,6 +208,8 @@ extension YASMP: MCSessionDelegate {
 					let peerPlayedTime: CMTime = ref[2]
 					let peerMasterTime: CMTime = ref[3]
 					let delta: CMTime = CMTimeSubtract(CMTimeModApprox(CMTimeAdd(CMTimeSubtract(peerPlayedTime, selfPlayedTime), half), full), half)
+					let reply: CMTime = CMTimeSubtract(masterTime, ref[1])
+					guard CMTimeGetSeconds(CMTimeAbsoluteValue(reply)) < threshold else { return }
 					guard follow == peerID else {
 						selfAnchor = selfMasterTime
 						peerAnchor = peerMasterTime
@@ -201,9 +221,10 @@ extension YASMP: MCSessionDelegate {
 					guard threshold < CMTimeGetSeconds(CMTimeAbsoluteValue(delay)) else { return }
 					let selfElapsed: CMTime = CMTimeSubtract(selfMasterTime, selfAnchor)
 					let peerElapsed: CMTime = CMTimeSubtract(peerMasterTime, peerAnchor)
-					let rate: Double = Double(peerElapsed.value) / Double(selfElapsed.value) * Double(selfElapsed.timescale) / Double(peerElapsed.timescale)
+					let rate: Double = CMTimeGetSeconds(peerElapsed) / CMTimeGetSeconds(selfElapsed)
 					player.setRate(Float(rate), time: peerPlayedTime, atHostTime: selfMasterTime)
 					os_log("Adjust rate %lf for delay %lf sec", log: facility, type: .info, rate, CMTimeGetSeconds(delta))
+					print("\(Date()): Adjust rate \(rate) for delay \(CMTimeGetSeconds(delta)) sec")
 					delay = kCMTimeZero
 				default:
 					break
