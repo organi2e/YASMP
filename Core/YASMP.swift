@@ -21,20 +21,18 @@ class YASMP: NSObject {
 	let browser: MCNearbyServiceBrowser
 	let source: DispatchSourceTimer
 	let threshold: Double
-	let divisor: Int32
 	let full: CMTime
 	let half: CMTime
 	let myself: MCPeerID
 	var follow: MCPeerID
+	var little: CMTime
 	var peerAnchor: CMTime
 	var selfAnchor: CMTime
-	var delay: CMTime
 	var layer: AVPlayerLayer {
 		return AVPlayerLayer(player: player)
 	}
 	init(urls: Array<URL>, mode: Mode,
 	     interval: Double,
-	     average: Int,
 	     service: String = "YASMP") throws {
 		let assets: Array<AVAsset> = urls.map {
 			let asset: AVURLAsset = AVURLAsset(url: $0, options: Dictionary<String, Any>(dictionaryLiteral: (AVURLAssetPreferPreciseDurationAndTimingKey, true)))
@@ -75,13 +73,12 @@ class YASMP: NSObject {
 		master = CMClockGetHostTimeClock()
 		myself = MCPeerID(displayName: UUID().uuidString)
 		follow = myself
+		little = kCMTimeZero
 		session = MCSession(peer: myself, securityIdentity: nil, encryptionPreference: .none)
 		advertiser = MCNearbyServiceAdvertiser(peer: myself, discoveryInfo: nil, serviceType: service)
 		browser = MCNearbyServiceBrowser(peer: myself, serviceType: service)
 		source = DispatchSource.makeTimerSource(flags: .strict, queue: .global(qos: .userInteractive))
 		threshold = 1 / maxfps
-		divisor = Int32(average)
-		delay = kCMTimeZero
 		selfAnchor = kCMTimeZero
 		peerAnchor = kCMTimeZero
 		super.init()
@@ -116,6 +113,7 @@ extension YASMP {
 extension YASMP {
 	func check() {
 		guard let dwarf: MCPeerID = session.connectedPeers.sorted(by: {$0.displayName < $1.displayName}).first, dwarf.displayName < myself.displayName else {
+			player.rate = 1.0
 			return
 		}
 		let playedTime: CMTime = player.currentTime()
@@ -131,31 +129,31 @@ extension YASMP {
 		do {
 			try session.send(data, toPeers: Array<MCPeerID>(repeating: dwarf, count: 1), with: .unreliable)
 		} catch {
-			os_log("%s", log: facility, type: .error, error.localizedDescription)
+			os_log("%@", log: facility, type: .error, error.localizedDescription)
 		}
 	}
 }
 extension YASMP: MCNearbyServiceAdvertiserDelegate {
 	func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
-		os_log("join to %s", log: facility, type: .debug, peerID.displayName)
+		os_log("join to %@", log: facility, type: .debug, peerID.displayName)
 		invitationHandler(myself.displayName < peerID.displayName, session)
 	}
 	func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) {
-		os_log("critical error %s", log: facility, type: .error, error.localizedDescription)
+		os_log("critical error %@", log: facility, type: .error, error.localizedDescription)
 	}
 }
 extension YASMP: MCNearbyServiceBrowserDelegate {
 	func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String : String]?) {
-		os_log("found peer %s", log: facility, type: .debug, peerID.displayName)
+		os_log("found peer %@", log: facility, type: .debug, peerID.displayName)
 		guard peerID.displayName < session.connectedPeers.reduce(myself.displayName, { min($0, $1.displayName) }) else { return }
 		session.connectedPeers.forEach(session.cancelConnectPeer)
 		browser.invitePeer(peerID, to: session, withContext: nil, timeout: 0)
 	}
 	func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
-		os_log("lost peer %s", log: facility, type: .debug, peerID.displayName)
+		os_log("lost peer %@", log: facility, type: .debug, peerID.displayName)
 	}
 	func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) {
-		os_log("critical error %s", log: facility, type: .fault, error.localizedDescription)
+		os_log("critical error %@", log: facility, type: .fault, error.localizedDescription)
 	}
 }
 extension YASMP: MCSessionDelegate {
@@ -165,14 +163,14 @@ extension YASMP: MCSessionDelegate {
 	func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
 		switch state {
 		case .connecting:
-			os_log("connecting to %s", log: facility, type: .debug, peerID.displayName)
+			os_log("connecting to %@", log: facility, type: .debug, peerID.displayName)
 		case .connected:
-			os_log("connected to %s", log: facility, type: .debug, peerID.displayName)
+			os_log("connected to %@", log: facility, type: .debug, peerID.displayName)
 		//	guard peerID.displayName < myself.displayName else { return }
 		//	os_log("stop browsing", log: facility, type: .debug)
 		//	browser.stopBrowsingForPeers()
 		case .notConnected:
-			os_log("not connected to %s", log: facility, type: .debug, peerID.displayName)
+			os_log("not connected to %@", log: facility, type: .debug, peerID.displayName)
 		//	guard peerID.displayName < myself.displayName else { return }
 		//	os_log("restart browsing", log: facility, type: .debug)
 		//	browser.startBrowsingForPeers()
@@ -199,33 +197,34 @@ extension YASMP: MCSessionDelegate {
 					mutating[5] = UnsafeBufferPointer<CMTime>(start: ref, count: 4).reduce(kCMTimeZero, CMTimeAdd)
 					do {
 						try session.send(data, toPeers: Array<MCPeerID>(repeating: peerID, count: 1), with: .unreliable)
+						os_log("receive: %lf, %lf response: %lf, %lf", log: facility, type: .debug, ref[0].seconds, ref[1].seconds, ref[2].seconds, ref[3].seconds)
 					} catch {
-						os_log("%s", log: facility, type: .error, error.localizedDescription)
+						os_log("%@", log: facility, type: .error, error.localizedDescription)
 					}
 				case kCMTimeInvalid:
 					let selfPlayedTime: CMTime = CMTimeMultiplyByRatio(CMTimeAdd(playedTime, ref[0]), 1, 2)
 					let selfMasterTime: CMTime = CMTimeMultiplyByRatio(CMTimeAdd(masterTime, ref[1]), 1, 2)
 					let peerPlayedTime: CMTime = ref[2]
 					let peerMasterTime: CMTime = ref[3]
-					let delta: CMTime = CMTimeSubtract(CMTimeModApprox(CMTimeAdd(CMTimeSubtract(peerPlayedTime, selfPlayedTime), half), full), half)
+					let delay: CMTime = CMTimeSubtract(CMTimeModApprox(CMTimeAdd(CMTimeSubtract(peerPlayedTime, selfPlayedTime), half), full), half)
 					let reply: CMTime = CMTimeSubtract(masterTime, ref[1])
-					guard CMTimeGetSeconds(CMTimeAbsoluteValue(reply)) < threshold else { return }
+					os_log("delay: %lf, reply: %lf, little: %lf", log: facility, type: .debug, delay.seconds, reply.seconds, little.seconds)
 					guard follow == peerID else {
-						selfAnchor = selfMasterTime
-						peerAnchor = peerMasterTime
 						follow = peerID
-						delay = delta
+						little = kCMTimeInvalid
 						return
 					}
-					delay = CMTimeAdd(CMTimeMultiplyByRatio(delta, 1, divisor), CMTimeMultiplyByRatio(delay, divisor - 1, divisor))
-					guard threshold < CMTimeGetSeconds(CMTimeAbsoluteValue(delay)) else { return }
-					let selfElapsed: CMTime = CMTimeSubtract(selfMasterTime, selfAnchor)
-					let peerElapsed: CMTime = CMTimeSubtract(peerMasterTime, peerAnchor)
-					let rate: Double = CMTimeGetSeconds(peerElapsed) / CMTimeGetSeconds(selfElapsed)
+					guard CMTimeCompare(little, reply) < 0 else {
+						selfAnchor = selfMasterTime
+						peerAnchor = peerMasterTime
+						little = reply
+						return
+					}
+					guard CMTimeCompare(reply, CMTimeMultiply(little, 2)) < 0 else { return }
+					guard threshold < CMTimeAbsoluteValue(delay).seconds else { return }
+					let rate: Double = CMTimeSubtract(peerMasterTime, peerAnchor).seconds / CMTimeSubtract(selfMasterTime, selfAnchor).seconds
 					player.setRate(Float(rate), time: peerPlayedTime, atHostTime: selfMasterTime)
-					os_log("Adjust rate %lf for delay %lf sec", log: facility, type: .info, rate, CMTimeGetSeconds(delta))
-					print("\(Date()): Adjust rate \(rate) for delay \(CMTimeGetSeconds(delta)) sec")
-					delay = kCMTimeZero
+					os_log("adjust rate %lf", log: facility, type: .info, rate, rate)
 				default:
 					break
 			}

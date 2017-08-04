@@ -23,12 +23,10 @@ let parse: Dictionary<String, Array<Any>> = [
 	"--playlist": [""],
 	"--loop": [1],
 	"--profile": [""],
-	"--average": [12],
 	"--lock": []
 ]
 let(rest, arguments): (Array<String>, Dictionary<String, Array<Any>>) = getopt(arguments: CommandLine.arguments, parse: parse)
 guard let service: String = arguments["--identifier"]?.first as? String else { abort() }
-guard let average: Int = arguments["--average"]?.first as? Int else { abort() }
 guard let interval: Double = arguments["--interval"]?.first as? Double else { abort() }
 //guard let playlist: Array<Int> = (arguments["--playlist"]?.first? as? String)?.components(separatedBy: ",").flatMap { Int($0) } ?? [Int]()
 guard let loop: Int = arguments["--loop"]?.first as? Int else { abort() }
@@ -43,7 +41,7 @@ do {
 	if let profile: URL = profile {
 		guard screen.apply(profile: profile) else { abort() }
 	}
-	let yasmp: YASMP = try YASMP(urls: urls, mode: .shuffle(loop), interval: interval, average: average, service: service)
+	let yasmp: YASMP = try YASMP(urls: urls, mode: .shuffle(loop), interval: interval, service: service)
 	let view: NSView = NSView(frame: screen.frame)
 	
 	view.layer = yasmp.layer
