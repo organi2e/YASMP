@@ -31,9 +31,7 @@ class YASMP: NSObject {
 	var layer: AVPlayerLayer {
 		return AVPlayerLayer(player: player)
 	}
-	init(urls: Array<URL>, mode: Mode,
-	     interval: Double,
-	     service: String = "YASMP") throws {
+	init(urls: Array<URL>, mode: Mode, interval: Double, service: String = "YASMP") throws {
 		let assets: Array<AVAsset> = urls.map {
 			let asset: AVURLAsset = AVURLAsset(url: $0, options: Dictionary<String, Any>(dictionaryLiteral: (AVURLAssetPreferPreciseDurationAndTimingKey, true)))
 			let key: String = "tracks"
@@ -47,7 +45,7 @@ class YASMP: NSObject {
 					os_log("%@", log: facility, type: .debug, error?.localizedDescription ?? #function)
 				case .cancelled, .unknown, .failed:
 					os_log("%@", log: facility, type: .fault, error?.localizedDescription ?? #function)
-					fatalError()
+					fatalError(error?.localizedDescription ?? #function)
 				}
 			}
 			semaphore.wait()
@@ -209,18 +207,22 @@ extension YASMP: MCSessionDelegate {
 					let delay: CMTime = CMTimeSubtract(CMTimeModApprox(CMTimeAdd(CMTimeSubtract(peerPlayedTime, selfPlayedTime), half), full), half)
 					let reply: CMTime = CMTimeSubtract(masterTime, ref[1])
 					os_log("delay: %lf, reply: %lf, little: %lf", log: facility, type: .debug, delay.seconds, reply.seconds, little.seconds)
+					//
 					guard follow == peerID else {
 						follow = peerID
 						little = kCMTimeInvalid
 						return
 					}
+					//re-anchor on getting more reliable reply
 					guard CMTimeCompare(little, reply) < 0 else {
 						selfAnchor = selfMasterTime
 						peerAnchor = peerMasterTime
 						little = reply
 						return
 					}
-					guard CMTimeCompare(reply, CMTimeMultiply(little, 2)) < 0 else { return }
+					//
+					guard CMTimeCompare(reply, CMTimeMultiplyByRatio(little, 13, 8)) < 0 else { return }
+					//
 					guard threshold < CMTimeAbsoluteValue(delay).seconds else { return }
 					let rate: Double = CMTimeSubtract(peerMasterTime, peerAnchor).seconds / CMTimeSubtract(selfMasterTime, selfAnchor).seconds
 					player.setRate(Float(rate), time: peerPlayedTime, atHostTime: selfMasterTime)

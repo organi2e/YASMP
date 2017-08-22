@@ -48,7 +48,6 @@ do {
 	view.layer?.frame = view.frame
 	view.wantsLayer = true
 	view.enterFullScreenMode(screen, withOptions: nil)
-	
 	yasmp.resume()
 	
 	if !lock {
