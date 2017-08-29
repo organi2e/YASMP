@@ -33,8 +33,8 @@ class YASMP: NSObject {
 	}
 	init(urls: Array<URL>, mode: Mode, interval: Double, service: String = "YASMP") throws {
 		let assets: Array<AVAsset> = urls.map {
-			let asset: AVURLAsset = AVURLAsset(url: $0, options: Dictionary<String, Any>(dictionaryLiteral: (AVURLAssetPreferPreciseDurationAndTimingKey, true)))
 			let key: String = "tracks"
+			let asset: AVURLAsset = AVURLAsset(url: $0, options: Dictionary<String, Any>(dictionaryLiteral: (AVURLAssetPreferPreciseDurationAndTimingKey, true)))
 			let semaphore: DispatchSemaphore = DispatchSemaphore(value: 0)
 			asset.loadValuesAsynchronously(forKeys: Array<String>(repeating: key, count: 1)) {
 				var error: NSError?
@@ -42,16 +42,16 @@ class YASMP: NSObject {
 				case .loaded:
 					semaphore.signal()
 				case .loading:
-					os_log("%@", log: facility, type: .debug, error?.localizedDescription ?? #function)
+					os_log("%@", log: facility, type: .debug, error?.description ?? #function)
 				case .cancelled, .unknown, .failed:
-					os_log("%@", log: facility, type: .fault, error?.localizedDescription ?? #function)
-					fatalError(error?.localizedDescription ?? #function)
+					os_log("%@", log: facility, type: .fault, error?.description ?? #function)
+					fatalError(error?.description ?? #function)
 				}
 			}
 			semaphore.wait()
 			return asset
 		}
-		let maxfps: Double = Double(assets.reduce([], { $0 + $1.tracks }).reduce(1, { max($0, $1.nominalFrameRate )}))
+		let maxfps: Double = Double(assets.reduce([]){ $0 + $1.tracks }.reduce(1){ max($0, $1.nominalFrameRate )})
 		let index: Array<Int> = {
 			switch $0 {
 			case let .playlist(index):
@@ -127,7 +127,7 @@ extension YASMP {
 		do {
 			try session.send(data, toPeers: Array<MCPeerID>(repeating: dwarf, count: 1), with: .unreliable)
 		} catch {
-			os_log("%@", log: facility, type: .error, error.localizedDescription)
+			os_log("%@", log: facility, type: .error, error.description)
 		}
 	}
 }
@@ -137,7 +137,7 @@ extension YASMP: MCNearbyServiceAdvertiserDelegate {
 		invitationHandler(myself.displayName < peerID.displayName, session)
 	}
 	func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) {
-		os_log("critical error %@", log: facility, type: .error, error.localizedDescription)
+		os_log("critical error %@", log: facility, type: .error, error.description)
 	}
 }
 extension YASMP: MCNearbyServiceBrowserDelegate {
@@ -145,13 +145,14 @@ extension YASMP: MCNearbyServiceBrowserDelegate {
 		os_log("found peer %@", log: facility, type: .debug, peerID.displayName)
 		guard peerID.displayName < session.connectedPeers.reduce(myself.displayName, { min($0, $1.displayName) }) else { return }
 		session.connectedPeers.forEach(session.cancelConnectPeer)
+		session.disconnect()
 		browser.invitePeer(peerID, to: session, withContext: nil, timeout: 0)
 	}
 	func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
 		os_log("lost peer %@", log: facility, type: .debug, peerID.displayName)
 	}
 	func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) {
-		os_log("critical error %@", log: facility, type: .fault, error.localizedDescription)
+		os_log("critical error %@", log: facility, type: .fault, error.description)
 	}
 }
 extension YASMP: MCSessionDelegate {
@@ -197,7 +198,7 @@ extension YASMP: MCSessionDelegate {
 						try session.send(data, toPeers: Array<MCPeerID>(repeating: peerID, count: 1), with: .unreliable)
 						os_log("receive: %lf, %lf response: %lf, %lf", log: facility, type: .debug, ref[0].seconds, ref[1].seconds, ref[2].seconds, ref[3].seconds)
 					} catch {
-						os_log("%@", log: facility, type: .error, error.localizedDescription)
+						os_log("%@", log: facility, type: .error, error.description)
 					}
 				case kCMTimeInvalid:
 					let selfPlayedTime: CMTime = CMTimeMultiplyByRatio(CMTimeAdd(playedTime, ref[0]), 1, 2)
@@ -234,12 +235,20 @@ extension YASMP: MCSessionDelegate {
 	}
 	func session(_ session: MCSession, didReceive stream: InputStream, withName streamName: String, fromPeer peerID: MCPeerID) {
 		//nop
+		assertionFailure("\(#function) is not implemented")
 	}
 	func session(_ session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, with progress: Progress) {
 		//nop
+		assertionFailure("\(#function) is not implemented")
 	}
 	func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL, withError error: Error?) {
 		//nop
+		assertionFailure("\(#function) is not implemented")
+	}
+}
+private extension Error {
+	var description: String {
+		return String(describing: self)
 	}
 }
 private func gcd<T: Integer>(_ m: T, _ n: T) -> T {
