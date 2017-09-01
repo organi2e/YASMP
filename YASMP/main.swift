@@ -34,12 +34,12 @@ let lock: Bool = arguments["--lock"]?.isEmpty == false
 let profile: URL? = arguments["--profile"]?.flatMap{$0 as?String}.filter{FileManager.default.fileExists(atPath: $0)}.map{URL(fileURLWithPath: $0)}.first
 let urls: Array<URL> = rest.filter { FileManager.default.fileExists(atPath: $0) }.map { URL(fileURLWithPath: $0) }
 do {
-	let app: NSApplication = NSApplication.shared()
-	guard let screen: NSScreen = NSScreen.main() else {
+	let app: NSApplication = .shared()
+	guard let screen: NSScreen = .main() else {
 		throw NSError(domain: #function, code: #line, userInfo: nil)
 	}
 	if let profile: URL = profile {
-		guard screen.apply(profile: profile) else { abort() }
+		guard screen.apply(profile: profile) else { throw NSError(domain: #function, code: #line, userInfo: nil) }
 	}
 	let yasmp: YASMP = try YASMP(urls: urls, mode: .shuffle(loop), interval: interval, service: service)
 	let view: NSView = NSView(frame: screen.frame)
@@ -51,15 +51,15 @@ do {
 	yasmp.resume()
 	
 	if !lock {
-		NSEvent.addLocalMonitorForEvents(matching: NSEventMask.keyDown) {
-			if $0.modifierFlags.contains(NSEventModifierFlags.command), $0.charactersIgnoringModifiers == "q" {
+		NSEvent.addLocalMonitorForEvents(matching: .keyDown) {
+			if $0.modifierFlags.contains(.command), $0.charactersIgnoringModifiers == "q" {
 				app.terminate(app)
 			}
 			return $0
 		}
 	}
 	NSCursor.hide()
-	app.run()
+	withExtendedLifetime(yasmp, app.run)
 } catch {
 	os_log("%s", log: .default, type: .fault, error.localizedDescription)
 }
