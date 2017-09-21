@@ -13,7 +13,7 @@ extension NSScreen {
 		guard let num: UInt32 = deviceDescription["NSScreenNumber"] as? UInt32 else { return false }
 		return ColorSyncDeviceSetCustomProfiles(kColorSyncDisplayDeviceClass.takeUnretainedValue(),
 		                                        CGDisplayCreateUUIDFromDisplayID(num).takeUnretainedValue(),
-		                                        [(kColorSyncDeviceDefaultProfileID.takeUnretainedValue() as String): (profile as URL),
+		                                        [(kColorSyncDeviceDefaultProfileID.takeUnretainedValue() as String): profile,
 		                                         (kColorSyncProfileUserScope.takeUnretainedValue() as String): (kCFPreferencesCurrentUser as String)]as CFDictionary)
 	}
 }

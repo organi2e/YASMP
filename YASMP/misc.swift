@@ -7,45 +7,43 @@
 //
 
 import Foundation
-import AVFoundation
-
 func getopt (arguments: Array<String>, parse: Dictionary<String,Array<Any>>) -> (Array<String>, Dictionary<String,Array<Any>>) {
 	var keys: Dictionary<String, Array<Any>> = parse
 	var opts: Dictionary<String, Array<Any>> = keys
 	var rest: Array<String> = Array<String>()
-	var argIndex = 1
+	var argIndex: Int = 1
 	while argIndex < arguments.count {
-		let key = arguments[argIndex]
+		let key: String = arguments[argIndex]
 		if keys.keys.contains(key) {
-			if var value = keys[key]
+			if var value: Array<Any> = keys[key]
 			{
 				if 0 < value.count
 				{
-					var valueIndex = 0
+					var valueIndex: Int = 0
 					while valueIndex < value.count {
 						argIndex = argIndex + 1
 						switch value[valueIndex] {
 						case let x as Bool:
-                            value[valueIndex] = Bool(arguments[argIndex]) ?? x
+							value[valueIndex] = Bool(arguments[argIndex]) ?? x
 						case let x as Int:
 							value[valueIndex] = Int(arguments[argIndex]) ?? x
 						case let x as UInt:
 							value[valueIndex] = UInt(arguments[argIndex]) ?? x
-                        case let x as Int8:
-                            value[valueIndex] = Int8(arguments[argIndex]) ?? x
-                        case let x as Int16:
-                            value[valueIndex] = Int16(arguments[argIndex]) ?? x
-                        case let x as Int32:
-                            value[valueIndex] = Int32(arguments[argIndex]) ?? x
-                        case let x as Int64:
-                            value[valueIndex] = Int64(arguments[argIndex]) ?? x
-                        case let x as UInt8:
-                            value[valueIndex] = UInt8(arguments[argIndex]) ?? x
-                        case let x as UInt16:
-                            value[valueIndex] = UInt16(arguments[argIndex]) ?? x
-                        case let x as UInt32:
-                            value[valueIndex] = UInt32(arguments[argIndex]) ?? x
-                        case let x as UInt64:
+						case let x as Int8:
+							value[valueIndex] = Int8(arguments[argIndex]) ?? x
+						case let x as Int16:
+							value[valueIndex] = Int16(arguments[argIndex]) ?? x
+						case let x as Int32:
+							value[valueIndex] = Int32(arguments[argIndex]) ?? x
+						case let x as Int64:
+							value[valueIndex] = Int64(arguments[argIndex]) ?? x
+						case let x as UInt8:
+							value[valueIndex] = UInt8(arguments[argIndex]) ?? x
+						case let x as UInt16:
+							value[valueIndex] = UInt16(arguments[argIndex]) ?? x
+						case let x as UInt32:
+							value[valueIndex] = UInt32(arguments[argIndex]) ?? x
+						case let x as UInt64:
 							value[valueIndex] = UInt64(arguments[argIndex]) ?? x
 						case let x as Float:
 							value[valueIndex] = Float(arguments[argIndex]) ?? x

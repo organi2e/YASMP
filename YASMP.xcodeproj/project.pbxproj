@@ -106,8 +106,8 @@
 		879F2C271D910D5E006DFB8B /* YASMP */ = {
 			isa = PBXGroup;
 			children = (
-				8779FEE21F73756800C7D62E /* misc.swift */,
 				879F2C281D910D5E006DFB8B /* main.swift */,
+				8779FEE21F73756800C7D62E /* misc.swift */,
 			);
 			path = YASMP;
 			sourceTree = "<group>";
