@@ -21,6 +21,8 @@ class YASMP: NSObject {
 	let browser: MCNearbyServiceBrowser
 	let source: DispatchSourceTimer
 	let threshold: Double
+	let upper: Double
+	let lower: Double
 	let full: CMTime
 	let half: CMTime
 	let myself: MCPeerID
@@ -31,7 +33,7 @@ class YASMP: NSObject {
 	var layer: AVPlayerLayer {
 		return AVPlayerLayer(player: player)
 	}
-	init(urls: Array<URL>, mode: Mode, interval: Double, service: String = "YASMP") throws {
+	init(urls: Array<URL>, mode: Mode, interval: Double, range: Double, service: String = "YASMP") throws {
 		let assets: Array<AVAsset> = urls.map {
 			let key: String = "tracks"
 			let asset: AVURLAsset = AVURLAsset(url: $0, options: Dictionary<String, Any>(dictionaryLiteral: (AVURLAssetPreferPreciseDurationAndTimingKey, true)))
@@ -77,6 +79,7 @@ class YASMP: NSObject {
 		browser = MCNearbyServiceBrowser(peer: myself, serviceType: service)
 		source = DispatchSource.makeTimerSource(flags: .strict, queue: .global(qos: .userInteractive))
 		threshold = 1 / maxfps
+		(lower, upper) = (pow(0.5, range), pow(2.0, range))
 		selfAnchor = kCMTimeZero
 		peerAnchor = kCMTimeZero
 		super.init()
@@ -226,6 +229,7 @@ extension YASMP: MCSessionDelegate {
 					//
 					guard threshold < CMTimeAbsoluteValue(delay).seconds else { return }
 					let rate: Double = CMTimeSubtract(peerMasterTime, peerAnchor).seconds / CMTimeSubtract(selfMasterTime, selfAnchor).seconds
+					guard lower < rate, rate < upper else { return }
 					player.setRate(Float(rate), time: peerPlayedTime, atHostTime: selfMasterTime)
 					os_log("adjust rate %lf", log: facility, type: .info, rate, rate)
 				default:

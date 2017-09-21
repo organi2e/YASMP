@@ -23,13 +23,15 @@ let parse: Dictionary<String, Array<Any>> = [
 	"--playlist": [""],
 	"--loop": [1],
 	"--profile": [""],
+	"--range": [Double(0.05)],
 	"--lock": []
 ]
 let(rest, arguments): (Array<String>, Dictionary<String, Array<Any>>) = getopt(arguments: CommandLine.arguments, parse: parse)
-guard let service: String = arguments["--identifier"]?.first as? String else { abort() }
-guard let interval: Double = arguments["--interval"]?.first as? Double else { abort() }
+guard let service: String = arguments["--identifier"]?.first as? String else { fatalError("Invalid identifier") }
+guard let interval: Double = arguments["--interval"]?.first as? Double else { fatalError("Invalid interval") }
 //guard let playlist: Array<Int> = (arguments["--playlist"]?.first? as? String)?.components(separatedBy: ",").flatMap { Int($0) } ?? [Int]()
-guard let loop: Int = arguments["--loop"]?.first as? Int else { abort() }
+guard let loop: Int = arguments["--loop"]?.first as? Int else { fatalError("Invalid loop") }
+guard let range: Double = arguments["--range"]?.first as? Double else { fatalError("Invalid range") }
 let lock: Bool = arguments["--lock"]?.isEmpty == false
 let profile: URL? = arguments["--profile"]?.flatMap{$0 as?String}.filter{FileManager.default.fileExists(atPath: $0)}.map{URL(fileURLWithPath: $0)}.first
 let urls: Array<URL> = rest.filter { FileManager.default.fileExists(atPath: $0) }.map { URL(fileURLWithPath: $0) }
@@ -41,7 +43,7 @@ do {
 	if let profile: URL = profile {
 		guard screen.apply(profile: profile) else { throw NSError(domain: #function, code: #line, userInfo: nil) }
 	}
-	let yasmp: YASMP = try YASMP(urls: urls, mode: .shuffle(loop), interval: interval, service: service)
+	let yasmp: YASMP = try YASMP(urls: urls, mode: .shuffle(loop), interval: interval, range: range, service: service)
 	let view: NSView = NSView(frame: screen.frame)
 	
 	view.layer = yasmp.layer
@@ -61,5 +63,5 @@ do {
 	NSCursor.hide()
 	withExtendedLifetime(yasmp, app.run)
 } catch {
-	os_log("%s", log: .default, type: .fault, error.localizedDescription)
+	os_log("%s", log: .default, type: .fault, String(describing: error))
 }

@@ -7,7 +7,6 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		8711ED8E1E5AC3BA0065B88C /* misc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8711ED8B1E5AC3BA0065B88C /* misc.swift */; };
 		872EEAB91D89317400C1C1F0 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 872EEAB81D89317400C1C1F0 /* AppDelegate.swift */; };
 		872EEABB1D89317400C1C1F0 /* ViewController.swift in Sources */ = {isa = PBXBuildFile; fileRef = 872EEABA1D89317400C1C1F0 /* ViewController.swift */; };
 		872EEABD1D89317400C1C1F0 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 872EEABC1D89317400C1C1F0 /* Assets.xcassets */; };
@@ -18,6 +17,7 @@
 		87450E901D90E8F1008BAEFE /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 87450E8E1D90E8F1008BAEFE /* Main.storyboard */; };
 		87450E921D90E8F1008BAEFE /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 87450E911D90E8F1008BAEFE /* Assets.xcassets */; };
 		87450EB61D90EC05008BAEFE /* YASMP.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D6F74F1D87BE73003339BD /* YASMP.swift */; };
+		8779FEE31F73756800C7D62E /* misc.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8779FEE21F73756800C7D62E /* misc.swift */; };
 		879F2C291D910D5E006DFB8B /* main.swift in Sources */ = {isa = PBXBuildFile; fileRef = 879F2C281D910D5E006DFB8B /* main.swift */; };
 		879F2C2D1D910D81006DFB8B /* YASMP.swift in Sources */ = {isa = PBXBuildFile; fileRef = 87D6F74F1D87BE73003339BD /* YASMP.swift */; };
 /* End PBXBuildFile section */
@@ -36,7 +36,6 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
-		8711ED8B1E5AC3BA0065B88C /* misc.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = misc.swift; path = Core/misc.swift; sourceTree = "<group>"; };
 		872EEAB61D89317400C1C1F0 /* macYASMP.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = macYASMP.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		872EEAB81D89317400C1C1F0 /* AppDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppDelegate.swift; sourceTree = "<group>"; };
 		872EEABA1D89317400C1C1F0 /* ViewController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewController.swift; sourceTree = "<group>"; };
@@ -49,6 +48,7 @@
 		87450E8F1D90E8F1008BAEFE /* Base */ = {isa = PBXFileReference; lastKnownFileType = file.storyboard; name = Base; path = Base.lproj/Main.storyboard; sourceTree = "<group>"; };
 		87450E911D90E8F1008BAEFE /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		87450E931D90E8F1008BAEFE /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		8779FEE21F73756800C7D62E /* misc.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; path = misc.swift; sourceTree = "<group>"; };
 		879F2C261D910D5E006DFB8B /* YASMP */ = {isa = PBXFileReference; explicitFileType = "compiled.mach-o.executable"; includeInIndex = 0; path = YASMP; sourceTree = BUILT_PRODUCTS_DIR; };
 		879F2C281D910D5E006DFB8B /* main.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = main.swift; sourceTree = "<group>"; };
 		87D6F74F1D87BE73003339BD /* YASMP.swift */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.swift; name = YASMP.swift; path = Core/YASMP.swift; sourceTree = "<group>"; };
@@ -106,6 +106,7 @@
 		879F2C271D910D5E006DFB8B /* YASMP */ = {
 			isa = PBXGroup;
 			children = (
+				8779FEE21F73756800C7D62E /* misc.swift */,
 				879F2C281D910D5E006DFB8B /* main.swift */,
 			);
 			path = YASMP;
@@ -136,7 +137,6 @@
 			isa = PBXGroup;
 			children = (
 				87D6F74F1D87BE73003339BD /* YASMP.swift */,
-				8711ED8B1E5AC3BA0065B88C /* misc.swift */,
 			);
 			name = Core;
 			sourceTree = "<group>";
@@ -285,8 +285,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				8779FEE31F73756800C7D62E /* misc.swift in Sources */,
 				879F2C291D910D5E006DFB8B /* main.swift in Sources */,
-				8711ED8E1E5AC3BA0065B88C /* misc.swift in Sources */,
 				879F2C2D1D910D81006DFB8B /* YASMP.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
