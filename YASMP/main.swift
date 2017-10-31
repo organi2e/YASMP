@@ -5,16 +5,15 @@
 //  Created by Kota Nakano on 9/20/16.
 //
 //
-
 import Cocoa
 import os.log
 extension NSScreen {
 	func apply(profile: URL) -> Bool {
-		guard let num: UInt32 = deviceDescription["NSScreenNumber"] as? UInt32 else { return false }
+		guard let num: UInt32 = deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? UInt32 else { return false }
 		return ColorSyncDeviceSetCustomProfiles(kColorSyncDisplayDeviceClass.takeUnretainedValue(),
 		                                        CGDisplayCreateUUIDFromDisplayID(num).takeUnretainedValue(),
-		                                        [(kColorSyncDeviceDefaultProfileID.takeUnretainedValue() as String): profile,
-		                                         (kColorSyncProfileUserScope.takeUnretainedValue() as String): (kCFPreferencesCurrentUser as String)]as CFDictionary)
+		                                        [kColorSyncDeviceDefaultProfileID.takeUnretainedValue(): profile,
+		                                         kColorSyncProfileUserScope.takeUnretainedValue(): kCFPreferencesCurrentUser] as CFDictionary)
 	}
 }
 let parse: Dictionary<String, Array<Any>> = [
@@ -35,33 +34,40 @@ guard let range: Double = arguments["--range"]?.first as? Double else { fatalErr
 let lock: Bool = arguments["--lock"]?.isEmpty == false
 let profile: URL? = arguments["--profile"]?.flatMap{$0 as?String}.filter{FileManager.default.fileExists(atPath: $0)}.map{URL(fileURLWithPath: $0)}.first
 let urls: Array<URL> = rest.filter { FileManager.default.fileExists(atPath: $0) }.map { URL(fileURLWithPath: $0) }
+
 do {
-	let app: NSApplication = .shared()
-	guard let screen: NSScreen = .main() else {
-		throw NSError(domain: #function, code: #line, userInfo: nil)
-	}
-	if let profile: URL = profile {
-		guard screen.apply(profile: profile) else { throw NSError(domain: #function, code: #line, userInfo: nil) }
-	}
 	let yasmp: YASMP = try YASMP(urls: urls, mode: .shuffle(loop), interval: interval, range: range, service: service)
-	let view: NSView = NSView(frame: screen.frame)
-	
+	let view: NSView = NSView()
 	view.layer = yasmp.layer
-	view.layer?.frame = view.frame
 	view.wantsLayer = true
-	view.enterFullScreenMode(screen, withOptions: nil)
-	yasmp.resume()
-	
+	func reset() {
+		guard let screen: NSScreen = .main else { return }
+		if let profile: URL = profile {
+			guard screen.apply(profile: profile) else { return }
+		}
+		yasmp.pause()
+		view.exitFullScreenMode(options: nil)
+		view.frame = screen.frame
+		view.layer?.frame = view.frame
+		view.enterFullScreenMode(screen, withOptions: nil)
+		yasmp.resume()
+		os_log("reset playing", log: OSLog(subsystem: "YASMP", category: "player"), type: .info)
+	}
+	let app: NSApplication = .shared
 	if !lock {
-		NSEvent.addLocalMonitorForEvents(matching: .keyDown) {
-			if $0.modifierFlags.contains(.command), $0.charactersIgnoringModifiers == "q" {
+        NSEvent.addLocalMonitorForEvents(matching: .keyDown) {
+            if $0.modifierFlags.contains(.command), $0.charactersIgnoringModifiers == "q" {
 				app.terminate(app)
 			}
 			return $0
 		}
 	}
+	let monitor: NSObjectProtocol = NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: nil) { _ in
+		reset()
+	}
+	reset()
 	NSCursor.hide()
-	withExtendedLifetime(yasmp, app.run)
+	withExtendedLifetime((yasmp, view, monitor), app.run)
 } catch {
 	os_log("%s", log: .default, type: .fault, String(describing: error))
 }

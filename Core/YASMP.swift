@@ -44,10 +44,10 @@ class YASMP: NSObject {
 				case .loaded:
 					semaphore.signal()
 				case .loading:
-					os_log("%@", log: facility, type: .debug, error?.description ?? #function)
+					os_log("%@", log: facility, type: .debug, String(describing: error))
 				case .cancelled, .unknown, .failed:
-					os_log("%@", log: facility, type: .fault, error?.description ?? #function)
-					fatalError(error?.description ?? #function)
+					os_log("%@", log: facility, type: .fault, String(describing: error))
+					assertionFailure(String(describing: error))
 				}
 			}
 			semaphore.wait()
@@ -83,37 +83,48 @@ class YASMP: NSObject {
 		selfAnchor = kCMTimeZero
 		peerAnchor = kCMTimeZero
 		super.init()
-		//player.actionAtItemEnd = .none
 		player.masterClock = master
+		player.actionAtItemEnd = .none
 		player.automaticallyWaitsToMinimizeStalling = false
-		source.setEventHandler(handler: check)
-		source.scheduleRepeating(deadline: .now(), interval: interval)
 		advertiser.delegate = self
 		browser.delegate = self
 		session.delegate = self
-		advertiser.startAdvertisingPeer()
-		browser.startBrowsingForPeers()
+		source.setEventHandler(handler: check)
+		source.schedule(wallDeadline: .now(), repeating: interval)
+		source.resume()
 	}
 	deinit {
-		browser.stopBrowsingForPeers()
-		advertiser.stopAdvertisingPeer()
 		player.pause()
 		source.cancel()
 	}
 }
 extension YASMP {
 	func pause() {
-		source.suspend()
+		browser.stopBrowsingForPeers()
+		advertiser.stopAdvertisingPeer()
+		session.connectedPeers.forEach(session.cancelConnectPeer)
+		follow = myself
+		little = kCMTimeZero
+		peerAnchor = kCMTimeZero
+		selfAnchor = kCMTimeZero
 		player.pause()
 	}
 	func resume() {
 		player.play()
-		source.resume()
+		session.connectedPeers.forEach(session.cancelConnectPeer)
+		follow = myself
+		little = kCMTimeZero
+		peerAnchor = kCMTimeZero
+		selfAnchor = kCMTimeZero
+		advertiser.startAdvertisingPeer()
+		browser.startBrowsingForPeers()
 	}
 }
 extension YASMP {
 	func check() {
-		guard let dwarf: MCPeerID = session.connectedPeers.sorted(by: {$0.displayName < $1.displayName}).first, dwarf.displayName < myself.displayName else {
+		guard
+			let dwarf: MCPeerID = session.connectedPeers.sorted(by: {$0.displayName < $1.displayName}).first,
+			dwarf.displayName < myself.displayName else {
 			player.rate = 1.0
 			return
 		}
@@ -130,32 +141,40 @@ extension YASMP {
 		do {
 			try session.send(data, toPeers: Array<MCPeerID>(repeating: dwarf, count: 1), with: .unreliable)
 		} catch {
-			os_log("%@", log: facility, type: .error, error.description)
+			os_log("%@", log: facility, type: .error, String(describing: error))
 		}
 	}
 }
 extension YASMP: MCNearbyServiceAdvertiserDelegate {
 	func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didReceiveInvitationFromPeer peerID: MCPeerID, withContext context: Data?, invitationHandler: @escaping (Bool, MCSession?) -> Void) {
-		os_log("join to %@", log: facility, type: .debug, peerID.displayName)
-		invitationHandler(myself.displayName < peerID.displayName, session)
+		if peerID.displayName < myself.displayName {
+			invitationHandler(true, session)
+			os_log("join to %@", log: facility, type: .debug, String(peerID.displayName))
+		}
+//		invitationHandler(true, session)
+//		invitationHandler(myself.displayName < peerID.displayName, session)
 	}
 	func advertiser(_ advertiser: MCNearbyServiceAdvertiser, didNotStartAdvertisingPeer error: Error) {
-		os_log("critical error %@", log: facility, type: .error, error.description)
+		os_log("critical error %@", log: facility, type: .fault, String(describing: error))
+		assertionFailure("critical error \(error)")
 	}
 }
 extension YASMP: MCNearbyServiceBrowserDelegate {
 	func browser(_ browser: MCNearbyServiceBrowser, foundPeer peerID: MCPeerID, withDiscoveryInfo info: [String : String]?) {
-		os_log("found peer %@", log: facility, type: .debug, peerID.displayName)
+		os_log("found peer %@", log: facility, type: .debug, String(peerID.displayName))
+		/*
 		guard peerID.displayName < session.connectedPeers.reduce(myself.displayName, { min($0, $1.displayName) }) else { return }
 		session.connectedPeers.forEach(session.cancelConnectPeer)
 		session.disconnect()
+		*/
 		browser.invitePeer(peerID, to: session, withContext: nil, timeout: 0)
 	}
 	func browser(_ browser: MCNearbyServiceBrowser, lostPeer peerID: MCPeerID) {
-		os_log("lost peer %@", log: facility, type: .debug, peerID.displayName)
+		os_log("lost peer %@", log: facility, type: .debug, String(peerID.displayName))
 	}
 	func browser(_ browser: MCNearbyServiceBrowser, didNotStartBrowsingForPeers error: Error) {
-		os_log("critical error %@", log: facility, type: .fault, error.description)
+		os_log("critical error %@", log: facility, type: .fault, String(describing: error))
+		assertionFailure("critical error \(error)")
 	}
 }
 extension YASMP: MCSessionDelegate {
@@ -165,17 +184,11 @@ extension YASMP: MCSessionDelegate {
 	func session(_ session: MCSession, peer peerID: MCPeerID, didChange state: MCSessionState) {
 		switch state {
 		case .connecting:
-			os_log("connecting to %@", log: facility, type: .debug, peerID.displayName)
+			os_log("connecting to %@", log: facility, type: .debug, String(peerID.displayName))
 		case .connected:
-			os_log("connected to %@", log: facility, type: .debug, peerID.displayName)
-		//	guard peerID.displayName < myself.displayName else { return }
-		//	os_log("stop browsing", log: facility, type: .debug)
-		//	browser.stopBrowsingForPeers()
+			os_log("connected to %@", log: facility, type: .debug, String(peerID.displayName))
 		case .notConnected:
-			os_log("not connected to %@", log: facility, type: .debug, peerID.displayName)
-		//	guard peerID.displayName < myself.displayName else { return }
-		//	os_log("restart browsing", log: facility, type: .debug)
-		//	browser.startBrowsingForPeers()
+			os_log("not connected to %@", log: facility, type: .debug, String(peerID.displayName))
 		}
 	}
 	func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
@@ -201,7 +214,7 @@ extension YASMP: MCSessionDelegate {
 						try session.send(data, toPeers: Array<MCPeerID>(repeating: peerID, count: 1), with: .unreliable)
 						os_log("receive: %lf, %lf response: %lf, %lf", log: facility, type: .debug, ref[0].seconds, ref[1].seconds, ref[2].seconds, ref[3].seconds)
 					} catch {
-						os_log("%@", log: facility, type: .error, error.description)
+						os_log("%@", log: facility, type: .error, String(describing: error))
 					}
 				case kCMTimeInvalid:
 					let selfPlayedTime: CMTime = CMTimeMultiplyByRatio(CMTimeAdd(playedTime, ref[0]), 1, 2)
@@ -245,7 +258,7 @@ extension YASMP: MCSessionDelegate {
 		//nop
 		assertionFailure("\(#function) is not implemented")
 	}
-	func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL, withError error: Error?) {
+    func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL?, withError error: Error?) {
 		//nop
 		assertionFailure("\(#function) is not implemented")
 	}
@@ -255,10 +268,10 @@ private extension Error {
 		return String(describing: self)
 	}
 }
-private func gcd<T: Integer>(_ m: T, _ n: T) -> T {
+private func gcd<T: BinaryInteger>(_ m: T, _ n: T) -> T {
 	return n == 0 ? m : gcd(n, m % n)
 }
-private func mod<T: Integer>(_ m: T, _ n: T) -> T {
+private func mod<T: BinaryInteger>(_ m: T, _ n: T) -> T {
 	return ( ( m % n ) + n ) % n
 }
 private func CMTimeMod(_ x: CMTime, _ y: CMTime) -> CMTime {
