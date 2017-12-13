@@ -32,28 +32,26 @@ guard let interval: Double = arguments["--interval"]?.first as? Double else { fa
 guard let loop: Int = arguments["--loop"]?.first as? Int else { fatalError("Invalid loop") }
 guard let range: Double = arguments["--range"]?.first as? Double else { fatalError("Invalid range") }
 let lock: Bool = arguments["--lock"]?.isEmpty == false
-let profile: URL? = arguments["--profile"]?.flatMap{$0 as?String}.filter{FileManager.default.fileExists(atPath: $0)}.map{URL(fileURLWithPath: $0)}.first
-let urls: Array<URL> = rest.filter { FileManager.default.fileExists(atPath: $0) }.map { URL(fileURLWithPath: $0) }
-
+let profile: URL? = arguments["--profile"]?.flatMap {
+	guard
+		let path: String = $0 as? String,
+		FileManager.default.fileExists(atPath: path) else {
+			return nil
+		}
+		return URL(fileURLWithPath: path)
+	}.first
+let urls: Array<URL> = rest.flatMap {
+	guard FileManager.default.fileExists(atPath: $0) else {
+		return nil
+	}
+	return URL(fileURLWithPath: $0)
+	}
 do {
+	let app: NSApplication = .shared
 	let yasmp: YASMP = try YASMP(urls: urls, mode: .shuffle(loop), interval: interval, range: range, service: service)
 	let view: NSView = NSView()
 	view.layer = yasmp.layer
 	view.wantsLayer = true
-	func reset() {
-		guard let screen: NSScreen = .main else { return }
-		if let profile: URL = profile {
-			guard screen.apply(profile: profile) else { return }
-		}
-		yasmp.pause()
-		view.exitFullScreenMode(options: nil)
-		view.frame = screen.frame
-		view.layer?.frame = view.frame
-		view.enterFullScreenMode(screen, withOptions: nil)
-		yasmp.resume()
-		os_log("reset playing", log: OSLog(subsystem: "YASMP", category: "player"), type: .info)
-	}
-	let app: NSApplication = .shared
 	if !lock {
         NSEvent.addLocalMonitorForEvents(matching: .keyDown) {
             if $0.modifierFlags.contains(.command), $0.charactersIgnoringModifiers == "q" {
@@ -62,12 +60,23 @@ do {
 			return $0
 		}
 	}
-	let monitor: NSObjectProtocol = NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: nil) { _ in
+	func reset() {
+		guard let screen: NSScreen = .main else { return }
+		yasmp.pause()
+		view.exitFullScreenMode(options: nil)
+		view.frame = screen.frame
+		view.layer?.frame = screen.frame
+		view.enterFullScreenMode(screen, withOptions: nil)
+		yasmp.resume()
+		NSCursor.hide()
+		os_log("reset playing", log: OSLog(subsystem: "YASMP", category: "player"), type: .info)
+	}
+	func reset(notification: Notification) {
 		reset()
 	}
-	reset()
-	NSCursor.hide()
-	withExtendedLifetime((yasmp, view, monitor), app.run)
+	let nc: NSObjectProtocol = NotificationCenter.default.addObserver(forName: NSApplication.didChangeScreenParametersNotification, object: nil, queue: .main, using: reset)
+	RunLoop.current.perform(reset)
+	withExtendedLifetime((yasmp, view, app, nc), app.run)
 } catch {
 	os_log("%s", log: .default, type: .fault, String(describing: error))
 }

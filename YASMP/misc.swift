@@ -15,10 +15,11 @@ func getopt (arguments: Array<String>, parse: Dictionary<String,Array<Any>>) -> 
 	while argIndex < arguments.count {
 		let key: String = arguments[argIndex]
 		if keys.keys.contains(key) {
-			if var value: Array<Any> = keys[key]
-			{
-				if 0 < value.count
-				{
+			if var value: Array<Any> = keys[key] {
+				if value.isEmpty {
+					opts.updateValue([true], forKey: key)
+				}
+				else {
 					var valueIndex: Int = 0
 					while valueIndex < value.count {
 						argIndex = argIndex + 1
@@ -55,9 +56,6 @@ func getopt (arguments: Array<String>, parse: Dictionary<String,Array<Any>>) -> 
 						valueIndex = valueIndex + 1
 					}
 					opts.updateValue(value, forKey: key)
-				}
-				else {
-					opts.updateValue([true], forKey: key)
 				}
 			}
 			keys.removeValue(forKey: key)
