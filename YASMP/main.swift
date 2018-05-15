@@ -25,14 +25,15 @@ let parse: Dictionary<String, Array<Any>> = [
 	"--range": [Double(0.05)],
 	"--lock": []
 ]
-let(rest, arguments): (Array<String>, Dictionary<String, Array<Any>>) = getopt(arguments: CommandLine.arguments, parse: parse)
+let cmd: [String]? = nil//Debug use
+let(rest, arguments): (Array<String>, Dictionary<String, Array<Any>>) = getopt(arguments: cmd ?? CommandLine.arguments, parse: parse)
 guard let service: String = arguments["--identifier"]?.first as? String else { fatalError("Invalid identifier") }
 guard let interval: Double = arguments["--interval"]?.first as? Double else { fatalError("Invalid interval") }
 //guard let playlist: Array<Int> = (arguments["--playlist"]?.first? as? String)?.components(separatedBy: ",").flatMap { Int($0) } ?? [Int]()
 guard let loop: Int = arguments["--loop"]?.first as? Int else { fatalError("Invalid loop") }
 guard let range: Double = arguments["--range"]?.first as? Double else { fatalError("Invalid range") }
 let lock: Bool = arguments["--lock"]?.isEmpty == false
-let profile: URL? = arguments["--profile"]?.flatMap {
+let profile: URL? = arguments["--profile"]?.compactMap {
 	guard
 		let path: String = $0 as? String,
 		FileManager.default.fileExists(atPath: path) else {
@@ -40,7 +41,7 @@ let profile: URL? = arguments["--profile"]?.flatMap {
 		}
 		return URL(fileURLWithPath: path)
 	}.first
-let urls: Array<URL> = rest.flatMap {
+let urls: Array<URL> = rest.compactMap {
 	guard FileManager.default.fileExists(atPath: $0) else {
 		return nil
 	}

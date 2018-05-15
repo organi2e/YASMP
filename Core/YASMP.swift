@@ -36,23 +36,7 @@ class YASMP: NSObject {
 	}
 	init(urls: Array<URL>, mode: Mode, interval: Double, range: Double, service: String = "YASMP") throws {
 		let assets: Array<AVAsset> = urls.map {
-			let key: String = "tracks"
-			let asset: AVURLAsset = AVURLAsset(url: $0, options: [AVURLAssetPreferPreciseDurationAndTimingKey: true])
-			let semaphore: DispatchSemaphore = DispatchSemaphore(value: 0)
-			asset.loadValuesAsynchronously(forKeys: [key]) {
-				var error: NSError?
-				switch asset.statusOfValue(forKey: key, error: &error) {
-				case .loaded:
-					semaphore.signal()
-				case .loading:
-					os_log("%{public}@", log: facility, type: .debug, String(describing: error))
-				case .cancelled, .unknown, .failed:
-					os_log("%{public}@", log: facility, type: .fault, String(describing: error))
-					assertionFailure(String(describing: error))
-				}
-			}
-			semaphore.wait()
-			return asset
+			AVURLAsset(url: $0, options: [AVURLAssetPreferPreciseDurationAndTimingKey: true, AVURLAssetReferenceRestrictionsKey: true])
 		}
 		let maxfps: Double = Double(assets.reduce([]){ $0 + $1.tracks }.reduce(1){ max($0, $1.nominalFrameRate )})
 		let index: Array<Int> = {
@@ -204,21 +188,21 @@ extension YASMP: MCSessionDelegate {
 		switch state {
 		case .connecting:
 			os_log("connecting to %{public}@", log: facility, type: .debug, peerID.displayName)
-		//			browser.stopBrowsingForPeers()
+//			browser.stopBrowsingForPeers()
 		case .connected:
 			os_log("connected to %{public}@", log: facility, type: .debug, peerID.displayName)
-			//			browser.stopBrowsingForPeers()
-			//			browser.startBrowsingForPeers()
-			//	guard peerID.displayName < myself.displayName else { return }
-			//	os_log("stop browsing", log: facility, type: .debug)
-		//	browser.stopBrowsingForPeers()
+//			browser.stopBrowsingForPeers()
+//			browser.startBrowsingForPeers()
+//			guard peerID.displayName < myself.displayName else { return }
+//			os_log("stop browsing", log: facility, type: .debug)
+//			browser.stopBrowsingForPeers()
 		case .notConnected:
 			os_log("not connected to %{public}@", log: facility, type: .debug, peerID.displayName)
-			//			browser.stopBrowsingForPeers()
-			//			browser.startBrowsingForPeers()
-			//	guard peerID.displayName < myself.displayName else { return }
-			//	os_log("restart browsing", log: facility, type: .debug)
-			//	browser.startBrowsingForPeers()
+//			browser.stopBrowsingForPeers()
+//			browser.startBrowsingForPeers()
+//			guard peerID.displayName < myself.displayName else { return }
+//			os_log("restart browsing", log: facility, type: .debug)
+//			browser.startBrowsingForPeers()
 		}
 	}
 	func session(_ session: MCSession, didReceive data: Data, fromPeer peerID: MCPeerID) {
@@ -229,10 +213,12 @@ extension YASMP: MCSessionDelegate {
 		let playedTime: CMTime = player.currentTime()
 		let masterTime: CMTime = CMClockGetTime(master)
 		data.withUnsafeBytes { (ref: UnsafePointer<CMTime>) in
+			/*
 			guard ref[5] == UnsafeBufferPointer<CMTime>(start: ref, count: 4).reduce(kCMTimeZero, CMTimeAdd) else {
 				os_log("incorrect data", log: facility, type: .error)
 				return
 			}
+			*/
 			switch ref[4] {
 			case kCMTimeZero:
 				let mutating: UnsafeMutablePointer<CMTime> = UnsafeMutablePointer<CMTime>(mutating: ref)
@@ -306,9 +292,12 @@ private func CMTimeMod(_ x: CMTime, _ y: CMTime) -> CMTime {
 	return CMTime(value: mod(x.value*ys, y.value*xs), timescale: Int32(xs*ys*cs))
 }
 private func CMTimeModApprox(_ x: CMTime, _ y: CMTime) -> CMTime {
+	let cs: Int64 = Int64(gcd(x.timescale, y.timescale))
+	let xs: Int64 = Int64(x.timescale) / cs
+	let ys: Int64 = Int64(y.timescale) / cs
 	let (xv, yv, ts): (Int64, Int64, Int32) = x.timescale < y.timescale ?
-		(x.value * Int64(y.timescale) / Int64(x.timescale), y.value, y.timescale) :
-		(x.value, y.value * Int64(x.timescale) / Int64(y.timescale), x.timescale)
+		(x.value * ys / xs, y.value, y.timescale) :
+		(x.value, y.value * xs / ys, x.timescale)
 	return CMTime(value: mod(xv, yv), timescale: ts)
 }
 private func rndseq(count: Int, range: UInt32, last: UInt32? = nil) -> Array<Int> {
@@ -317,4 +306,3 @@ private func rndseq(count: Int, range: UInt32, last: UInt32? = nil) -> Array<Int
 	return [Int(next)] + rndseq(count: count - 1, range: range, last: next)
 }
 private let facility: OSLog = OSLog(subsystem: "YASMP", category: "Core")
-
