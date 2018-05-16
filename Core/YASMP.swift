@@ -64,14 +64,14 @@ class YASMP: NSObject {
 		advertiser = MCNearbyServiceAdvertiser(peer: myself, discoveryInfo: nil, serviceType: service)
 		browser = MCNearbyServiceBrowser(peer: myself, serviceType: service)
 		source = DispatchSource.makeTimerSource(flags: .strict, queue: .global(qos: .userInteractive))
-		threshold = 1 / maxfps
+		threshold = 3.0 / maxfps
 		(lower, upper) = (pow(0.5, range), pow(2.0, range))
 		selfAnchor = kCMTimeZero
 		peerAnchor = kCMTimeZero
 		super.init()
 		os_log("myself %{public}@", log: facility, type: .debug, myself.displayName)
 		player.masterClock = master
-		//player.actionAtItemEnd = .none
+//		player.actionAtItemEnd = .none
 		player.automaticallyWaitsToMinimizeStalling = false
 		advertiser.delegate = self
 		browser.delegate = self
@@ -213,12 +213,10 @@ extension YASMP: MCSessionDelegate {
 		let playedTime: CMTime = player.currentTime()
 		let masterTime: CMTime = CMClockGetTime(master)
 		data.withUnsafeBytes { (ref: UnsafePointer<CMTime>) in
-			/*
 			guard ref[5] == UnsafeBufferPointer<CMTime>(start: ref, count: 4).reduce(kCMTimeZero, CMTimeAdd) else {
 				os_log("incorrect data", log: facility, type: .error)
 				return
 			}
-			*/
 			switch ref[4] {
 			case kCMTimeZero:
 				let mutating: UnsafeMutablePointer<CMTime> = UnsafeMutablePointer<CMTime>(mutating: ref)
