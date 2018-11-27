@@ -36,25 +36,7 @@ class YASMP: NSObject {
 	     interval: Double,
 	     average: Int,
 	     service: String = "YASMP") throws {
-		let assets: Array<AVAsset> = urls.map {
-			let asset: AVURLAsset = AVURLAsset(url: $0, options: Dictionary<String, Any>(dictionaryLiteral: (AVURLAssetPreferPreciseDurationAndTimingKey, true)))
-			let key: String = "tracks"
-			let semaphore: DispatchSemaphore = DispatchSemaphore(value: 0)
-			asset.loadValuesAsynchronously(forKeys: Array<String>(repeating: key, count: 1)) {
-				var error: NSError?
-				switch asset.statusOfValue(forKey: key, error: &error) {
-				case .loaded:
-					semaphore.signal()
-				case .loading:
-					os_log("%@", log: facility, type: .debug, error?.localizedDescription ?? #function)
-				case .cancelled, .unknown, .failed:
-					os_log("%@", log: facility, type: .fault, error?.localizedDescription ?? #function)
-					fatalError()
-				}
-			}
-			semaphore.wait()
-			return asset
-		}
+		let assets: Array<AVAsset> = urls.map(AVURLAsset.init)
 		let maxfps: Double = Double(assets.reduce([], { $0 + $1.tracks }).reduce(1, { max($0, $1.nominalFrameRate )}))
 		let index: Array<Int> = {
 			switch $0 {
@@ -65,11 +47,11 @@ class YASMP: NSObject {
 			}
 		} ( mode )
 		let composition: AVComposition = try index.reduce(AVMutableComposition()) {
-			try $0.insertTimeRange(CMTimeRange(start: kCMTimeZero, duration: assets[$1].duration), of: assets[$1], at: $0.duration)
+			try $0.insertTimeRange(CMTimeRange(start: .zero, duration: assets[$1].duration), of: assets[$1], at: $0.duration)
 			return $0
 		}
 		full = composition.duration
-		half = CMTimeMultiplyByRatio(full, 1, 2)
+		half = CMTimeMultiplyByRatio(full, multiplier: 1, divisor: 2)
 		player = AVQueuePlayer()
 		looper = AVPlayerLooper(player: player, templateItem: AVPlayerItem(asset: composition))
 		master = CMClockGetHostTimeClock()
@@ -81,15 +63,15 @@ class YASMP: NSObject {
 		source = DispatchSource.makeTimerSource(flags: .strict, queue: .global(qos: .userInteractive))
 		threshold = 1 / maxfps
 		divisor = Int32(average)
-		delay = kCMTimeZero
-		selfAnchor = kCMTimeZero
-		peerAnchor = kCMTimeZero
+		delay = .zero
+		selfAnchor = .zero
+		peerAnchor = .zero
 		super.init()
 		//player.actionAtItemEnd = .none
 		player.masterClock = master
 		player.automaticallyWaitsToMinimizeStalling = false
 		source.setEventHandler(handler: check)
-		source.scheduleRepeating(deadline: .now(), interval: interval)
+		source.schedule(wallDeadline: .now(), repeating: interval)
 		advertiser.delegate = self
 		browser.delegate = self
 		session.delegate = self
@@ -125,8 +107,8 @@ extension YASMP {
 			let mutating: UnsafeMutablePointer<CMTime> = UnsafeMutablePointer<CMTime>(mutating: ref)
 			mutating[0] = playedTime
 			mutating[1] = masterTime
-			mutating[4] = kCMTimeZero
-			mutating[5] = UnsafeBufferPointer<CMTime>(start: ref, count: 4).reduce(kCMTimeZero, CMTimeAdd)
+			mutating[4] = .zero
+			mutating[5] = UnsafeBufferPointer<CMTime>(start: ref, count: 4).reduce(.zero, CMTimeAdd)
 		}
 		do {
 			try session.send(data, toPeers: Array<MCPeerID>(repeating: dwarf, count: 1), with: .unreliable)
@@ -186,25 +168,25 @@ extension YASMP: MCSessionDelegate {
 		let playedTime: CMTime = player.currentTime()
 		let masterTime: CMTime = CMClockGetTime(master)
 		data.withUnsafeBytes { (ref: UnsafePointer<CMTime>) in
-			guard ref[5] == UnsafeBufferPointer<CMTime>(start: ref, count: 4).reduce(kCMTimeZero, CMTimeAdd) else {
+			guard ref[5] == UnsafeBufferPointer<CMTime>(start: ref, count: 4).reduce(.zero, CMTimeAdd) else {
 				os_log("incorrect data", log: facility, type: .error)
 				return
 			}
 			switch ref[4] {
-				case kCMTimeZero:
+				case .zero:
 					let mutating: UnsafeMutablePointer<CMTime> = UnsafeMutablePointer<CMTime>(mutating: ref)
 					mutating[2] = playedTime
 					mutating[3] = masterTime
-					mutating[4] = kCMTimeInvalid
-					mutating[5] = UnsafeBufferPointer<CMTime>(start: ref, count: 4).reduce(kCMTimeZero, CMTimeAdd)
+					mutating[4] = .invalid
+					mutating[5] = UnsafeBufferPointer<CMTime>(start: ref, count: 4).reduce(.zero, CMTimeAdd)
 					do {
 						try session.send(data, toPeers: Array<MCPeerID>(repeating: peerID, count: 1), with: .unreliable)
 					} catch {
 						os_log("%s", log: facility, type: .error, error.localizedDescription)
 					}
-				case kCMTimeInvalid:
-					let selfPlayedTime: CMTime = CMTimeMultiplyByRatio(CMTimeAdd(playedTime, ref[0]), 1, 2)
-					let selfMasterTime: CMTime = CMTimeMultiplyByRatio(CMTimeAdd(masterTime, ref[1]), 1, 2)
+				case .invalid:
+					let selfPlayedTime: CMTime = CMTimeMultiplyByRatio(CMTimeAdd(playedTime, ref[0]), multiplier: 1, divisor: 2)
+					let selfMasterTime: CMTime = CMTimeMultiplyByRatio(CMTimeAdd(masterTime, ref[1]), multiplier: 1, divisor: 2)
 					let peerPlayedTime: CMTime = ref[2]
 					let peerMasterTime: CMTime = ref[3]
 					let delta: CMTime = CMTimeSubtract(CMTimeModApprox(CMTimeAdd(CMTimeSubtract(peerPlayedTime, selfPlayedTime), half), full), half)
@@ -217,7 +199,7 @@ extension YASMP: MCSessionDelegate {
 						delay = delta
 						return
 					}
-					delay = CMTimeAdd(CMTimeMultiplyByRatio(delta, 1, divisor), CMTimeMultiplyByRatio(delay, divisor - 1, divisor))
+					delay = CMTimeAdd(CMTimeMultiplyByRatio(delta, multiplier: 1, divisor: divisor), CMTimeMultiplyByRatio(delay, multiplier: divisor - 1, divisor: divisor))
 					guard threshold < CMTimeGetSeconds(CMTimeAbsoluteValue(delay)) else { return }
 					let selfElapsed: CMTime = CMTimeSubtract(selfMasterTime, selfAnchor)
 					let peerElapsed: CMTime = CMTimeSubtract(peerMasterTime, peerAnchor)
@@ -225,7 +207,7 @@ extension YASMP: MCSessionDelegate {
 					player.setRate(Float(rate), time: peerPlayedTime, atHostTime: selfMasterTime)
 					os_log("Adjust rate %lf for delay %lf sec", log: facility, type: .info, rate, CMTimeGetSeconds(delta))
 					print("\(Date()): Adjust rate \(rate) for delay \(CMTimeGetSeconds(delta)) sec")
-					delay = kCMTimeZero
+					delay = .zero
 				default:
 					break
 			}
@@ -237,14 +219,14 @@ extension YASMP: MCSessionDelegate {
 	func session(_ session: MCSession, didStartReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, with progress: Progress) {
 		//nop
 	}
-	func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL, withError error: Error?) {
+	func session(_ session: MCSession, didFinishReceivingResourceWithName resourceName: String, fromPeer peerID: MCPeerID, at localURL: URL?, withError error: Error?) {
 		//nop
 	}
 }
-private func gcd<T: Integer>(_ m: T, _ n: T) -> T {
+private func gcd<T: BinaryInteger>(_ m: T, _ n: T) -> T {
 	return n == 0 ? m : gcd(n, m % n)
 }
-private func mod<T: Integer>(_ m: T, _ n: T) -> T {
+private func mod<T: BinaryInteger>(_ m: T, _ n: T) -> T {
 	return ( ( m % n ) + n ) % n
 }
 private func CMTimeMod(_ x: CMTime, _ y: CMTime) -> CMTime {

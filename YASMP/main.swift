@@ -10,7 +10,7 @@ import Cocoa
 import os.log
 extension NSScreen {
 	func apply(profile: URL) -> Bool {
-		guard let num: UInt32 = deviceDescription["NSScreenNumber"] as? UInt32 else { return false }
+		guard let num: UInt32 = deviceDescription[.init(rawValue: "NSScreenNumber")] as? UInt32 else { return false }
 		return ColorSyncDeviceSetCustomProfiles(kColorSyncDisplayDeviceClass.takeUnretainedValue(),
 		                                        CGDisplayCreateUUIDFromDisplayID(num).takeUnretainedValue(),
 		                                        [(kColorSyncDeviceDefaultProfileID.takeUnretainedValue() as String): (profile as URL),
@@ -33,11 +33,11 @@ guard let interval: Double = arguments["--interval"]?.first as? Double else { ab
 //guard let playlist: Array<Int> = (arguments["--playlist"]?.first? as? String)?.components(separatedBy: ",").flatMap { Int($0) } ?? [Int]()
 guard let loop: Int = arguments["--loop"]?.first as? Int else { abort() }
 let lock: Bool = arguments["--lock"]?.isEmpty == false
-let profile: URL? = arguments["--profile"]?.flatMap{$0 as?String}.filter{FileManager.default.fileExists(atPath: $0)}.map{URL(fileURLWithPath: $0)}.first
+let profile: URL? = arguments["--profile"]?.compactMap{$0 as?String}.filter{FileManager.default.fileExists(atPath: $0)}.map{URL(fileURLWithPath: $0)}.first
 let urls: Array<URL> = rest.filter { FileManager.default.fileExists(atPath: $0) }.map { URL(fileURLWithPath: $0) }
 do {
-	let app: NSApplication = NSApplication.shared()
-	guard let screen: NSScreen = NSScreen.main() else {
+	let app: NSApplication = .shared
+	guard let screen: NSScreen = .main else {
 		throw NSError(domain: #function, code: #line, userInfo: nil)
 	}
 	if let profile: URL = profile {
@@ -54,8 +54,8 @@ do {
 	yasmp.resume()
 	
 	if !lock {
-		NSEvent.addLocalMonitorForEvents(matching: NSEventMask.keyDown) {
-			if $0.modifierFlags.contains(NSEventModifierFlags.command), $0.charactersIgnoringModifiers == "q" {
+		NSEvent.addLocalMonitorForEvents(matching: .keyDown) {
+			if $0.modifierFlags.contains(.command), $0.charactersIgnoringModifiers == "q" {
 				app.terminate(app)
 			}
 			return $0
